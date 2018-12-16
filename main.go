@@ -4,14 +4,16 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 
 	"gopkg.in/telegram-bot-api.v4"
 )
 
 const (
-	BotToken   = "***REMOVED***"
-	WebhookURL = "https://fx-coffee-bot.herokuapp.com/"
+	BotToken     = "***REMOVED***"
+	HerokuAppURL = "https://fx-coffee-bot.herokuapp.com"
 )
 
 var rss = map[string]string{
@@ -46,6 +48,15 @@ func getNews(url string) (*RSS, error) {
 }
 
 func main() {
+	var err error
+	port := os.Getenv("PORT")
+	if port == "" {
+		log.Fatal("$PORT must be set")
+	}
+
+	webHook := "/bot"
+	webhookURL := HerokuAppURL + ":" + port + webHook
+
 	bot, err := tgbotapi.NewBotAPI(BotToken)
 	if err != nil {
 		panic(err)
@@ -53,16 +64,17 @@ func main() {
 
 	// bot.Debug = true
 	fmt.Printf("Authorized on account %s\n", bot.Self.UserName)
+	fmt.Printf("Set new Web Hook %s\n", webhookURL)
 
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook(WebhookURL))
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook(webhookURL))
 	if err != nil {
 		panic(err)
 	}
 
-	updates := bot.ListenForWebhook("/")
+	updates := bot.ListenForWebhook(webHook)
 
-	go http.ListenAndServe(":8080", nil)
-	fmt.Println("start listen :8080")
+	go http.ListenAndServe(":"+port, nil)
+	fmt.Println("start listen :" + port)
 
 	// получаем все обновления из канала updates
 	for update := range updates {
@@ -90,6 +102,12 @@ func main() {
 }
 
 /*
+	heroku git:remote -a fx-coffee-bot
+	git push heroku master
+
+	heroku plugins:install @heroku-cli/plugin-manifest
+	heroku manifest:create
+
 	go get gopkg.in/telegram-bot-api.v4
 
 	Telegram - speak to 'BotFather'
