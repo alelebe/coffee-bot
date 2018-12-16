@@ -1,0 +1,9 @@
+# https://devcenter.heroku.com/articles/heroku-yml-build-manifest
+# https://devcenter.heroku.com/articles/buildpack-builds-heroku-yml
+setup:
+  config: {}
+build:
+  languages:
+    - go
+run:
+  web: fx-coffee-bot
