@@ -1,0 +1,12 @@
+{
+  "name": "FX Coffee Bot",
+  "description": "Telegram Bot written in Go",
+  "keywords": [
+    "telegram bot",
+    "go",
+    "coffee",
+    "fx"
+  ],
+  "website": "https://github.com/alelebe/fx-coffee-bot",
+  "repository": "https://github.com/alelebe/fx-coffee-bot"
+}
