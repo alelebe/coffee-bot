@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -76,15 +77,23 @@ func removeWebhook() {
 func setupWebhook() {
 	var err error
 
-	baseURL := os.Getenv("BASE_URL")
-	if baseURL == "" {
-		log.Println("$BASE_URL must be set")
+	base := os.Getenv("BASE_URL")
+	if base == "" {
+		log.Fatal("$BASE_URL must be set")
 	}
+	baseURL, err := url.Parse(base)
+	if err != nil {
+		log.Fatal(err)
+	}
+	url, err := url.Parse("/bot" + bot.Token)
+	if err != nil {
+		log.Fatal(err)
+	}
+	hookURL := baseURL.ResolveReference(url)
 
 	// this perhaps should be conditional on GetWebhookInfo()
 	// only set webhook if it is not set properly
-	url := baseURL + bot.Token
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook(url))
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook(hookURL.String()))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -178,7 +187,7 @@ func runRouter() {
 	router := gin.New()
 	router.Use(gin.Logger())
 
-	router.POST("/"+bot.Token, webhookHandler)
+	router.POST("/bot"+bot.Token, webhookHandler)
 
 	err = router.Run(":" + port)
 	if err != nil {
