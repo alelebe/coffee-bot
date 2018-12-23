@@ -1,19 +1,20 @@
 package main
 
 import (
+	"encoding/json"
 	"encoding/xml"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
-	"gopkg.in/telegram-bot-api.v4"
+	"github.com/gin-gonic/gin"
+	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-const (
-	BotToken     = "***REMOVED***"
-	HerokuAppURL = "https://fx-coffee-bot.herokuapp.com"
+var (
+	bot *tgbotapi.BotAPI
 )
 
 var rss = map[string]string{
@@ -47,68 +48,176 @@ func getNews(url string) (*RSS, error) {
 	return rss, nil
 }
 
-func main() {
+func initTelegramBot() {
 	var err error
+
+	token := os.Getenv("TOKEN")
+	if token == "" {
+		log.Println("$TOKEN must be set")
+	}
+
+	bot, err = tgbotapi.NewBotAPI(token)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	debugBot := os.Getenv("DEBUG_BOT")
+	if debugBot != "" && debugBot != "0" {
+		bot.Debug = true
+	}
+
+	log.Printf("Authorized on account %s", bot.Self.UserName)
+}
+
+func removeWebhook() {
+	bot.RemoveWebhook()
+}
+
+func setupWebhook() {
+	var err error
+
+	baseURL := os.Getenv("BASE_URL")
+	if baseURL == "" {
+		log.Println("$BASE_URL must be set")
+	}
+
+	// this perhaps should be conditional on GetWebhookInfo()
+	// only set webhook if it is not set properly
+	url := baseURL + bot.Token
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook(url))
+	if err != nil {
+		log.Fatal(err)
+	}
+	info, err := bot.GetWebhookInfo()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if info.LastErrorDate != 0 {
+		log.Printf("Telegram callback failed: %s", info.LastErrorMessage)
+	}
+
+	log.Printf("Pending updates: %d\n", info.PendingUpdateCount)
+}
+
+func webhookHandler(c *gin.Context) {
+	defer c.Request.Body.Close()
+
+	bytes, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	var update tgbotapi.Update
+	err = json.Unmarshal(bytes, &update)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	processUpdate(update)
+}
+
+func processUpdate(update tgbotapi.Update) {
+
+	if update.Message == nil { // ignore any non-Message Updates
+		return
+	}
+	// to monitor changes run: heroku logs --tail
+	log.Printf("From %+v: %+v\n", update.Message.From, update.Message.Text)
+
+	if url, ok := rss[update.Message.Text]; ok {
+		rss, err := getNews(url)
+		if err != nil {
+			bot.Send(tgbotapi.NewMessage(
+				update.Message.Chat.ID,
+				"sorry, error happend",
+			))
+		}
+		for _, item := range rss.Items {
+			bot.Send(tgbotapi.NewMessage(
+				update.Message.Chat.ID,
+				item.URL+"\n"+item.Title,
+			))
+		}
+	} else {
+		bot.Send(tgbotapi.NewMessage(
+			update.Message.Chat.ID,
+			`there is only Habr feed availible`,
+		))
+	}
+}
+
+func runLocally() {
+
+	u := tgbotapi.NewUpdate(0)
+	u.Timeout = 60
+
+	updates, err := bot.GetUpdatesChan(u)
+	if err != nil {
+		panic(err)
+	}
+
+	// читаем обновления из канала
+	for {
+		select {
+		case update := <-updates:
+			processUpdate(update)
+		}
+	}
+}
+
+func runRouter() {
+	var err error
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		log.Fatal("$PORT must be set")
 	}
 
-	webHook := "/bot"
-	webhookURL := HerokuAppURL + ":" + port + webHook
+	// gin router
+	router := gin.New()
+	router.Use(gin.Logger())
 
-	bot, err := tgbotapi.NewBotAPI(BotToken)
+	router.POST("/"+bot.Token, webhookHandler)
+
+	err = router.Run(":" + port)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
+}
 
-	// bot.Debug = true
-	fmt.Printf("Authorized on account %s\n", bot.Self.UserName)
-	fmt.Printf("Set new Web Hook %s\n", webhookURL)
+func main() {
 
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook(webhookURL))
-	if err != nil {
-		panic(err)
+	// telegram
+	initTelegramBot()
+
+	env := os.Getenv("ENV")
+	if env == "" {
+		env = "local"
 	}
+	log.Println("Bot server started in the " + env + " mode")
 
-	updates := bot.ListenForWebhook(webHook)
-
-	go http.ListenAndServe(":"+port, nil)
-	fmt.Println("start listen :" + port)
-
-	// получаем все обновления из канала updates
-	for update := range updates {
-		if url, ok := rss[update.Message.Text]; ok {
-			rss, err := getNews(url)
-			if err != nil {
-				bot.Send(tgbotapi.NewMessage(
-					update.Message.Chat.ID,
-					"sorry, error happend",
-				))
-			}
-			for _, item := range rss.Items {
-				bot.Send(tgbotapi.NewMessage(
-					update.Message.Chat.ID,
-					item.URL+"\n"+item.Title,
-				))
-			}
-		} else {
-			bot.Send(tgbotapi.NewMessage(
-				update.Message.Chat.ID,
-				`there is only Habr feed availible`,
-			))
-		}
+	if strings.ToLower(env) == "local" {
+		removeWebhook()
+		runLocally()
+	} else {
+		setupWebhook()
+		runRouter()
 	}
 }
 
 /*
+	go get gopkg.in/telegram-bot-api.v4
 	heroku git:remote -a fx-coffee-bot
-	git push heroku master
+
+	govendor init
+	govendor fetch github.com/gin-gonic/gin
 
 	heroku plugins:install @heroku-cli/plugin-manifest
 	heroku manifest:create
 
-	go get gopkg.in/telegram-bot-api.v4
+	git push heroku master
+	heroku logs --tail
 
 	Telegram - speak to 'BotFather'
 		name:		alelebeGoHabr
@@ -119,4 +228,15 @@ func main() {
 
 	https://dashboard.ngrok.com/get-started
 	./ngrok http 8080
+		==> update WebhookURL
+
+	go install
+	heroku local
+
+HOWTO: stop the app
+	heroku ps:scale web=0
+
+	$ git push heroku master
+	$ heroku ps:scale web=1
+	$ heroku open
 */
