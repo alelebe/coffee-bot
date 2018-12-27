@@ -21,38 +21,57 @@ type Vars struct {
 //Program :
 type Program struct {
 	Vars
-	news *NewsBot
+	news   *NewsBot
+	coffee *CoffeeBot
 }
 
 func (p Program) isLocal() bool {
 	return p.mode == "LOCAL" || p.mode == ""
 }
 
-func (p Program) runLongPooling() {
+func configureUpdates(bot Bot) tgbotapi.UpdatesChannel {
 	var err error
+
+	_, err = bot.RemoveWebhook()
+	if err != nil {
+		log.Printf("Fail to get UpdatesChanel for '%s': %v\n", bot.Name, err)
+	}
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
+	updatesCh, err := bot.GetUpdatesChan(u)
+	if err != nil {
+		log.Printf("Fail to get UpdatesChanel for '%s': %v\n", bot.Name, err)
+		return nil
+	}
+	return updatesCh
+}
+
+func (p Program) runLongPooling() {
+
 	var newsCh tgbotapi.UpdatesChannel
+	var coffeeCh tgbotapi.UpdatesChannel
 
 	if p.news != nil {
-		p.news.RemoveWebhook()
-		newsCh, err = p.news.GetUpdatesChan(u)
-		if err != nil {
-			panic(err)
-		}
+		newsCh = configureUpdates(p.news.Bot)
+	}
+	if p.coffee != nil {
+		coffeeCh = configureUpdates(p.coffee.Bot)
 	}
 
-	if newsCh == nil {
+	if newsCh == nil && coffeeCh == nil {
 		log.Println("Nothing to do :-( -> check logs")
 		return
 	}
-	// читаем обновления из канала
+
+	// читаем обновления из канала (-ов)
 	for {
 		select {
 		case update := <-newsCh:
 			MessageHandler(p.news).ProcessUpdate(update)
+		case update := <-coffeeCh:
+			MessageHandler(p.coffee).ProcessUpdate(update)
 		}
 	}
 }
@@ -79,7 +98,12 @@ func (p Program) runRouter() {
 		configured = configured ||
 			p.configureHook(p.news.Bot, router, MessageHandler(p.news))
 	}
+	if p.coffee != nil {
+		configured = configured ||
+			p.configureHook(p.coffee.Bot, router, MessageHandler(p.coffee))
+	}
 
+	//start Router if at least one bot was configured and ready for work
 	if configured {
 		err = router.Run(":" + p.port)
 		if err != nil {
@@ -134,6 +158,7 @@ func main() {
 
 	// construct Telergam Bots
 	p.news = initNewsBot(getVar("NEWS_TOKEN"), p.debugBot)
+	p.coffee = initCoffeeBot(getVar("COFFEE_TOKEN"), p.debugBot)
 
 	if p.isLocal() {
 		p.runLongPooling()
@@ -153,20 +178,18 @@ func main() {
 	heroku plugins:install @heroku-cli/plugin-manifest
 	heroku manifest:create
 
-	git push heroku master
-	heroku logs --tail
-
-	Telegram - speak to 'BotFather'
-		name:		alelebeGoHabr
-		username:	alelebe_habr_bot
-
-		Use this token to access the HTTP API:
-		***REMOVED***
+	Telegram - speak to 'BotFather':
+	Use this token to access the HTTP API
+		alelebeGoHabr:
+			>> ***REMOVED***
+		FX-Coffee:
+			>> 3***REMOVED***
 
 	https://dashboard.ngrok.com/get-started
 	./ngrok http 8080
 		==> update WebhookURL
 
+HOWTO: run locally
 	go install
 	heroku local
 	heroku local -e .env.test
@@ -179,6 +202,7 @@ HOWTO: start the app
 	$ git push heroku master
 	$ heroku ps:scale web=1
 	$ heroku open
+	$ heroku logs --tail
 
 HOWTO: change app variable
 	$ heroku config:set GIN_MODE=release
