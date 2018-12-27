@@ -84,7 +84,9 @@ func initNewsBot(token string, debug bool) *NewsBot {
 			initBotAPI(token, debug),
 		},
 		Feeds: map[string]string{
-			"habr": "https://habrahabr.ru/rss/best/",
+			"Habr":     "https://habrahabr.ru/rss/best/",
+			"LearnGo":  "https://blog.learngoprogramming.com/feed",
+			"BBC News": "http://newsrss.bbc.co.uk/rss/newsonline_uk_edition/front_page/rss.xml",
 		},
 	}
 	return bot
