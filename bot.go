@@ -57,16 +57,16 @@ func dispatchMessage(c *gin.Context, handler MessageHandler) {
 	handler.ProcessUpdate(update)
 }
 
-func (bot Bot) setupWebhook(baseURL string, router *gin.Engine, handler MessageHandler) {
+func (bot Bot) setupWebhook(baseURL string, router *gin.Engine, handler MessageHandler) error {
 	var err error
 
 	base, err := url.Parse(baseURL)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	url, err := url.Parse("/bot" + bot.Token)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	hookURL := base.ResolveReference(url)
 
@@ -74,18 +74,19 @@ func (bot Bot) setupWebhook(baseURL string, router *gin.Engine, handler MessageH
 	// only set webhook if it is not set properly
 	_, err = bot.SetWebhook(tgbotapi.NewWebhook(hookURL.String()))
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	router.POST("/bot"+bot.Token, func(c *gin.Context) {
 		dispatchMessage(c, handler)
 	})
+	return nil
 }
 
 func (bot Bot) logWebhookDetails() {
 	info, err := bot.GetWebhookInfo()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	log.Printf("Web hook: %s\n", info.URL)

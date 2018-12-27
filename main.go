@@ -9,6 +9,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
+//Vars :
 type Vars struct {
 	port    string
 	baseURL string
@@ -28,15 +29,25 @@ func (p Program) isLocal() bool {
 }
 
 func (p Program) runLongPooling() {
+	var err error
+
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
-	p.news.RemoveWebhook()
-	newsCh, err := p.news.GetUpdatesChan(u)
-	if err != nil {
-		panic(err)
+	var newsCh tgbotapi.UpdatesChannel
+
+	if p.news != nil {
+		p.news.RemoveWebhook()
+		newsCh, err = p.news.GetUpdatesChan(u)
+		if err != nil {
+			panic(err)
+		}
 	}
 
+	if newsCh == nil {
+		log.Println("Nothing to do :-( -> check logs")
+		return
+	}
 	// читаем обновления из канала
 	for {
 		select {
@@ -46,16 +57,36 @@ func (p Program) runLongPooling() {
 	}
 }
 
+func (p Program) configureHook(bot Bot, router *gin.Engine, handler MessageHandler) bool {
+	var err error
+
+	err = bot.setupWebhook(p.baseURL, router, handler)
+	if err != nil {
+		log.Printf("Fail to set WebHook for '%s': %v\n", bot.Name, err)
+		return false
+	}
+	return true
+}
+
 func (p Program) runRouter() {
+	var err error
 	// run webHooks on Gin router
 	router := gin.New()
 	router.Use(gin.Logger())
 
-	p.news.setupWebhook(p.baseURL, router, MessageHandler(p.news))
+	configured := false
+	if p.news != nil {
+		configured = configured ||
+			p.configureHook(p.news.Bot, router, MessageHandler(p.news))
+	}
 
-	err := router.Run(":" + p.port)
-	if err != nil {
-		log.Fatal(err)
+	if configured {
+		err = router.Run(":" + p.port)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		log.Println("Nothing to do :-( -> check logs")
 	}
 }
 
@@ -117,6 +148,7 @@ func main() {
 
 	govendor init
 	govendor fetch github.com/gin-gonic/gin
+	govendor fetch github.com/go-telegram-bot-api/telegram-bot-api
 
 	heroku plugins:install @heroku-cli/plugin-manifest
 	heroku manifest:create
@@ -141,6 +173,7 @@ func main() {
 HOWTO: stop the app
 	heroku ps:scale web=0
 
+HOWTO: start the app
 	$ git push heroku master
 	$ heroku ps:scale web=1
 	$ heroku open
