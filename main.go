@@ -1,167 +1,38 @@
 package main
 
 import (
-	"encoding/json"
-	"encoding/xml"
-	"io/ioutil"
 	"log"
-	"net/http"
-	"net/url"
 	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-var (
-	bot *tgbotapi.BotAPI
-)
+type Vars struct {
+	port    string
+	baseURL string
 
-var rss = map[string]string{
-	"Habr": "https://habrahabr.ru/rss/best/",
+	debugBot bool
+	mode     string
 }
 
-type RSS struct {
-	Items []Item `xml:"channel>item"`
+//Program :
+type Program struct {
+	Vars
+	news *NewsBot
 }
 
-type Item struct {
-	URL   string `xml:"guid"`
-	Title string `xml:"title"`
+func (p Program) isLocal() bool {
+	return p.mode == "LOCAL" || p.mode == ""
 }
 
-func getNews(url string) (*RSS, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	rss := new(RSS)
-	err = xml.Unmarshal(body, rss)
-	if err != nil {
-		return nil, err
-	}
-
-	return rss, nil
-}
-
-func initTelegramBot() {
-	var err error
-
-	token := os.Getenv("TOKEN")
-	if token == "" {
-		log.Println("$TOKEN must be set")
-	}
-
-	bot, err = tgbotapi.NewBotAPI(token)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	debugBot := os.Getenv("DEBUG_BOT")
-	if debugBot != "" && debugBot != "0" {
-		bot.Debug = true
-	}
-
-	log.Printf("Authorized on account %s", bot.Self.UserName)
-}
-
-func removeWebhook() {
-	bot.RemoveWebhook()
-}
-
-func setupWebhook() {
-	var err error
-
-	base := os.Getenv("BASE_URL")
-	if base == "" {
-		log.Fatal("$BASE_URL must be set")
-	}
-	baseURL, err := url.Parse(base)
-	if err != nil {
-		log.Fatal(err)
-	}
-	url, err := url.Parse("/bot" + bot.Token)
-	if err != nil {
-		log.Fatal(err)
-	}
-	hookURL := baseURL.ResolveReference(url)
-
-	// this perhaps should be conditional on GetWebhookInfo()
-	// only set webhook if it is not set properly
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook(hookURL.String()))
-	if err != nil {
-		log.Fatal(err)
-	}
-	info, err := bot.GetWebhookInfo()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if info.LastErrorDate != 0 {
-		log.Printf("Telegram callback failed: %s", info.LastErrorMessage)
-	}
-
-	log.Printf("Pending updates: %d\n", info.PendingUpdateCount)
-}
-
-func webhookHandler(c *gin.Context) {
-	defer c.Request.Body.Close()
-
-	bytes, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	var update tgbotapi.Update
-	err = json.Unmarshal(bytes, &update)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	processUpdate(update)
-}
-
-func processUpdate(update tgbotapi.Update) {
-
-	if update.Message == nil { // ignore any non-Message Updates
-		return
-	}
-	// to monitor changes run: heroku logs --tail
-	log.Printf("From %+v: %+v\n", update.Message.From, update.Message.Text)
-
-	if url, ok := rss[update.Message.Text]; ok {
-		rss, err := getNews(url)
-		if err != nil {
-			bot.Send(tgbotapi.NewMessage(
-				update.Message.Chat.ID,
-				"sorry, error happend",
-			))
-		}
-		for _, item := range rss.Items {
-			bot.Send(tgbotapi.NewMessage(
-				update.Message.Chat.ID,
-				item.URL+"\n"+item.Title,
-			))
-		}
-	} else {
-		bot.Send(tgbotapi.NewMessage(
-			update.Message.Chat.ID,
-			`there is only Habr feed availible`,
-		))
-	}
-}
-
-func runLocally() {
-
+func (p Program) runLongPooling() {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
-	updates, err := bot.GetUpdatesChan(u)
+	p.news.RemoveWebhook()
+	newsCh, err := p.news.GetUpdatesChan(u)
 	if err != nil {
 		panic(err)
 	}
@@ -169,49 +40,74 @@ func runLocally() {
 	// читаем обновления из канала
 	for {
 		select {
-		case update := <-updates:
-			processUpdate(update)
+		case update := <-newsCh:
+			MessageHandler(p.news).ProcessUpdate(update)
 		}
 	}
 }
 
-func runRouter() {
-	var err error
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		log.Fatal("$PORT must be set")
-	}
-
-	// gin router
+func (p Program) runRouter() {
+	// run webHooks on Gin router
 	router := gin.New()
 	router.Use(gin.Logger())
 
-	router.POST("/bot"+bot.Token, webhookHandler)
+	p.news.setupWebhook(p.baseURL, router, MessageHandler(p.news))
 
-	err = router.Run(":" + port)
+	err := router.Run(":" + p.port)
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
+	}
+}
+
+func getVar(env string) string {
+	value := os.Getenv(env)
+	if value == "" {
+		log.Printf("$%s must be set\n", env)
+	}
+	return value
+}
+func getOptVar(env string, defValue string) string {
+	value := strings.ToLower(os.Getenv("ENV"))
+	if value == "" {
+		value = defValue
+	}
+	return value
+}
+
+func initVars() Vars {
+	port := getVar("PORT")
+	baseURL := getVar("BASE_URL")
+
+	debugStr := getOptVar("DEBUG_BOT", "0")
+
+	debug := false
+	if debugStr != "" && debugStr != "0" {
+		debug = true
+	}
+
+	mode := strings.ToUpper(getVar("ENV"))
+
+	return Vars{
+		port:     port,
+		baseURL:  baseURL,
+		debugBot: debug,
+		mode:     mode,
 	}
 }
 
 func main() {
-
-	// telegram
-	initTelegramBot()
-
-	env := os.Getenv("ENV")
-	if env == "" {
-		env = "local"
+	p := Program{
+		Vars: initVars(),
 	}
-	log.Println("Bot server started in the " + env + " mode")
+	log.Println("Started in " + p.mode + " mode")
 
-	if strings.ToLower(env) == "local" {
-		removeWebhook()
-		runLocally()
+	// construct Telergam Bots
+	p.news = initNewsBot(getVar("NEWS_TOKEN"), p.debugBot)
+
+	if p.isLocal() {
+		p.runLongPooling()
 	} else {
-		setupWebhook()
-		runRouter()
+		p.runRouter()
 	}
 }
 
