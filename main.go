@@ -180,6 +180,9 @@ HOWTO: start the app
 	$ heroku ps:scale web=1
 	$ heroku open
 
+HOWTO: change app variable
+	$ heroku config:set GIN_MODE=release
+
 HOWTO: debug
 https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code
 	>> Install Delve
