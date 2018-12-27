@@ -94,10 +94,10 @@ func (p Program) runRouter() {
 	router.Use(gin.Logger())
 
 	configured := false
-	if p.news != nil {
-		configured = configured ||
-			p.configureHook(p.news.Bot, router, MessageHandler(p.news))
-	}
+	// if p.news != nil {
+	// 	configured = configured ||
+	// 		p.configureHook(p.news.Bot, router, MessageHandler(p.news))
+	// }
 	if p.coffee != nil {
 		configured = configured ||
 			p.configureHook(p.coffee.Bot, router, MessageHandler(p.coffee))
