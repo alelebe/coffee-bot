@@ -94,13 +94,15 @@ func (p Program) runRouter() {
 	router.Use(gin.Logger())
 
 	configured := false
-	// if p.news != nil {
-	// 	configured = configured ||
-	// 		p.configureHook(p.news.Bot, router, MessageHandler(p.news))
-	// }
+	if p.news != nil {
+		if p.configureHook(p.news.Bot, router, MessageHandler(p.news)) {
+			configured = true
+		}
+	}
 	if p.coffee != nil {
-		configured = configured ||
-			p.configureHook(p.coffee.Bot, router, MessageHandler(p.coffee))
+		if p.configureHook(p.coffee.Bot, router, MessageHandler(p.coffee)) {
+			configured = true
+		}
 	}
 
 	//start Router if at least one bot was configured and ready for work
