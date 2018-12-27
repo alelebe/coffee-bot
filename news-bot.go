@@ -29,6 +29,16 @@ type Item struct {
 	Title string `xml:"title"`
 }
 
+func (bot NewsBot) getFeed(tag string) string {
+	key := strings.ToLower(tag)
+	for k, v := range bot.Feeds {
+		if key == strings.ToLower(k) {
+			return v
+		}
+	}
+	return ""
+}
+
 func getNews(url string) (*RSS, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -51,7 +61,7 @@ func (bot NewsBot) ProcessUpdate(update tgbotapi.Update) {
 	// to monitor changes run: heroku logs --tail
 	log.Printf("From %+v: %+v\n", update.Message.From, update.Message.Text)
 
-	if url, ok := bot.Feeds[strings.ToLower(update.Message.Text)]; ok {
+	if url := bot.getFeed(update.Message.Text); url != "" {
 		rss, err := getNews(url)
 		if err != nil {
 			bot.Send(tgbotapi.NewMessage(
@@ -85,7 +95,7 @@ func initNewsBot(token string, debug bool) *NewsBot {
 		},
 		Feeds: map[string]string{
 			"Habr":     "https://habrahabr.ru/rss/best/",
-			"LearnGo":  "https://blog.learngoprogramming.com/feed",
+			"Learn Go": "https://blog.learngoprogramming.com/feed",
 			"BBC News": "http://newsrss.bbc.co.uk/rss/newsonline_uk_edition/front_page/rss.xml",
 		},
 	}
