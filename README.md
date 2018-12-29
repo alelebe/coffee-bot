@@ -2,7 +2,8 @@
 
 First of all, it makes sense to start with https://devcenter.heroku.com/articles/getting-started-with-go
 
-## Prerequisit
+
+## Prerequisites
 
 Install Heroku CLI, login and link it with your application on Heroku.
 https://devcenter.heroku.com/articles/getting-started-with-go#set-up
@@ -12,8 +13,9 @@ https://devcenter.heroku.com/articles/getting-started-with-go#set-up
 
 With GitHub integration, every push to target branch in git repo on GitHub will trigger automatic deployment to the app on Heroku as described https://devcenter.heroku.com/articles/github-integration
 
+## HOWTO(s)
 
-## How to build locally
+### How to build locally
 
 git clone https://github.com/alelebe/fx-coffee-bot
 
@@ -36,7 +38,7 @@ where:
  - ...TOKEN : telegram Bot token
  
 
-## How to run locally
+### How to run locally
 ```
 	$ go install
 	$ heroku local
@@ -44,29 +46,29 @@ where:
 	$ hrekou ci:debug
 ```
 
-## How to stop the app on Heroku
+### How to stop the app on Heroku
 ```
 	$ heroku ps:scale web=0
 ```
 
-## How to start the app on Heroku
+### How to start the app on Heroku
 ```
 	$ git push heroku master
 	$ heroku ps:scale web=1
 	$ heroku open
 ```
 
-## How to check logs on Heroku
+### How to check logs on Heroku
 ```
 	$ heroku logs --tail
 ```
 
-## How to change ENV variable on Heroku
+### How to change ENV variable on Heroku
 ```
 	$ heroku config:set GIN_MODE=release
 ```
 
-## How to debug the app locally
+### How to debug the app locally
     Follow steps to install debugger for Golang: https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code
 	Install Delve:
 ```
