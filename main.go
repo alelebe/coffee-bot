@@ -69,9 +69,9 @@ func (p Program) runLongPooling() {
 	for {
 		select {
 		case update := <-newsCh:
-			MessageHandler(p.news).ProcessUpdate(update)
+			p.news.dispatchMessage(update, MessageHandler(p.news))
 		case update := <-coffeeCh:
-			MessageHandler(p.coffee).ProcessUpdate(update)
+			p.coffee.dispatchMessage(update, MessageHandler(p.coffee))
 		}
 	}
 }

@@ -30,5 +30,7 @@ func initCoffeeBot(token string, debug bool) *CoffeeBot {
 			initBotAPI(token, debug),
 		},
 	}
+
+	bot.logBotDetails()
 	return bot
 }

@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/url"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -31,12 +30,27 @@ func initBotAPI(token string, debug bool) *tgbotapi.BotAPI {
 	}
 
 	botAPI.Debug = debug
-
-	log.Printf("Authorized on account %s", botAPI.Self.UserName)
 	return botAPI
 }
 
-func dispatchMessage(c *gin.Context, handler MessageHandler) {
+func (bot Bot) logBotDetails() {
+	log.Printf("%s: Authorized on account %+v", bot.Name, bot.Self)
+}
+
+func (bot Bot) dispatchMessage(update tgbotapi.Update, handler MessageHandler) {
+	if update.Message == nil { // ignore any non-Message Updates
+		log.Printf("UPDATE: %+v\n", update)
+		return
+	}
+
+	// log.Printf("Date: %v\n", time.Unix(int64(update.Message.Date), 0))
+	log.Printf("From %+v: %+v\n", update.Message.From, update.Message.Text)
+	log.Printf("Type: %s\n", update.Message.Chat.Type)
+
+	handler.ProcessUpdate(update)
+}
+
+func (bot Bot) ginWebhook(c *gin.Context, handler MessageHandler) {
 	defer c.Request.Body.Close()
 
 	bytes, err := ioutil.ReadAll(c.Request.Body)
@@ -52,15 +66,7 @@ func dispatchMessage(c *gin.Context, handler MessageHandler) {
 		return
 	}
 
-	if update.Message == nil { // ignore any non-Message Updates
-		return
-	}
-
-	log.Printf("Date: %v\n", time.Unix(int64(update.Message.Date), 0))
-	log.Printf("From %+v: %+v\n", update.Message.From, update.Message.Text)
-	log.Printf("Chat: %+v\n", update.Message.Chat)
-
-	handler.ProcessUpdate(update)
+	bot.dispatchMessage(update, handler)
 }
 
 func (bot Bot) setupWebhook(baseURL string, router *gin.Engine, handler MessageHandler) error {
@@ -84,7 +90,7 @@ func (bot Bot) setupWebhook(baseURL string, router *gin.Engine, handler MessageH
 	}
 
 	router.POST("/bot"+bot.Token, func(c *gin.Context) {
-		dispatchMessage(c, handler)
+		bot.ginWebhook(c, handler)
 	})
 	return nil
 }

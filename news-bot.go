@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/xml"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 
@@ -58,8 +57,6 @@ func getNews(url string) (*RSS, error) {
 
 //ProcessUpdate : handling messages for the bot
 func (bot NewsBot) ProcessUpdate(update tgbotapi.Update) {
-	// to monitor changes run: heroku logs --tail
-	log.Printf("From %+v: %+v\n", update.Message.From, update.Message.Text)
 
 	if url := bot.getFeed(update.Message.Text); url != "" {
 		rss, err := getNews(url)
@@ -99,5 +96,7 @@ func initNewsBot(token string, debug bool) *NewsBot {
 			"BBC News": "http://newsrss.bbc.co.uk/rss/newsonline_uk_edition/front_page/rss.xml",
 		},
 	}
+
+	bot.logBotDetails()
 	return bot
 }
