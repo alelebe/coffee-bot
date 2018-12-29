@@ -22,3 +22,37 @@ where:
  - BASE_URL : heroku app URL (not used in local mode
  - ...TOKEN : telegram Bot token
  
+
+##HOWTO: run locally
+```
+	$ go install
+	$ heroku local
+	$ heroku local -e .env.test
+	$ hrekou ci:debug
+```
+
+##HOWTO: stop the app
+```
+	$ heroku ps:scale web=0
+```
+
+##HOWTO: start the app
+```
+	$ git push heroku master
+	$ heroku ps:scale web=1
+	$ heroku open
+	$ heroku logs --tail
+```
+
+##HOWTO: change app variable
+```
+	$ heroku config:set GIN_MODE=release
+```
+
+##HOWTO: debug
+    Follow steps to install debugger for Golang: https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code
+	Install Delve:
+```
+	$ xcode-select --install
+	$ go get -u github.com/derekparker/delve/cmd/dlv
+```
