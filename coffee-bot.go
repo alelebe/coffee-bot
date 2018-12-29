@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
@@ -14,8 +12,6 @@ type CoffeeBot struct {
 
 //ProcessUpdate : handling messages for the bot
 func (bot CoffeeBot) ProcessUpdate(update tgbotapi.Update) {
-	// to monitor changes run: heroku logs --tail
-	log.Printf("From %+v: %+v\n", update.Message.From, update.Message.Text)
 
 	bot.Send(tgbotapi.NewMessage(
 		update.Message.Chat.ID,

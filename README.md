@@ -5,13 +5,39 @@ First of all, it makes sense to start with https://devcenter.heroku.com/articles
 
 ## Prerequisites
 
-Install Heroku CLI, login and link it with your application on Heroku.
-https://devcenter.heroku.com/articles/getting-started-with-go#set-up
+Install Heroku CLI as described here:
+    https://devcenter.heroku.com/articles/heroku-cli
 
+The full reference for CLI commands is available here:
+    https://devcenter.heroku.com/articles/heroku-cli-commands
 
-### GitHub integration with Heroku
+### Login into your Heroku account
+```
+	$ heroku login
+	$ heroku login -i
+```
 
-With GitHub integration, every push to target branch in git repo on GitHub will trigger automatic deployment to the app on Heroku as described https://devcenter.heroku.com/articles/github-integration
+### Create new Heroku app
+
+Unless your application was already created (see next section), please follow the steps to create new app on Heroku:
+    https://devcenter.heroku.com/articles/creating-apps
+
+### Link your working Git folder with your Heroku app
+```
+    $ heroku git:remote -a fx-coffee-bot
+    set git remote heroku to https://git.heroku.com/fx-coffee-bot.git
+    $ heroku info
+```
+Basically, remote Heroku app must be configured as remote git repo. Therefore, an alternative and straighforward way to do that is:
+```
+    $ git remote add heroku git@heroku.com:fx-coffee-bot.git
+```
+
+### GitHub integration with Heroku [optional]
+
+With GitHub integration, every push to target branch in git repo on GitHub will trigger automatic deployment to the app on Heroku as described here:
+    https://devcenter.heroku.com/articles/github-integration
+
 
 ## HOWTO(s)
 

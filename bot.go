@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/url"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -54,6 +55,11 @@ func dispatchMessage(c *gin.Context, handler MessageHandler) {
 	if update.Message == nil { // ignore any non-Message Updates
 		return
 	}
+
+	log.Printf("Date: %v\n", time.Unix(int64(update.Message.Date), 0))
+	log.Printf("From %+v: %+v\n", update.Message.From, update.Message.Text)
+	log.Printf("Chat: %+v\n", update.Message.Chat)
+
 	handler.ProcessUpdate(update)
 }
 
