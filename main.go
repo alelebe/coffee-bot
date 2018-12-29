@@ -180,13 +180,6 @@ func main() {
 	heroku plugins:install @heroku-cli/plugin-manifest
 	heroku manifest:create
 
-	Telegram - speak to 'BotFather':
-	Use this token to access the HTTP API
-		alelebeGoHabr:
-			>> ***REMOVED***
-		FX-Coffee:
-			>> 3***REMOVED***
-
 	https://dashboard.ngrok.com/get-started
 	./ngrok http 8080
 		==> update WebhookURL
