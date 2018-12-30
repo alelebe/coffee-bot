@@ -34,7 +34,12 @@ func initBotAPI(token string, debug bool) *tgbotapi.BotAPI {
 }
 
 func (bot Bot) logBotDetails() {
-	log.Printf("%s: Authorized on account %+v", bot.Name, bot.Self)
+	log.Printf("%s: Authorized on account %s\n", bot.Name, bot.Self.UserName)
+
+	if bot.Debug {
+		log.Printf("%s: Debug mode is enabled\n", bot.Name)
+		log.Printf("%s: Buffer: %d\n", bot.Name, bot.Buffer)
+	}
 }
 
 func (bot Bot) dispatchMessage(update tgbotapi.Update, handler MessageHandler) {
@@ -44,8 +49,7 @@ func (bot Bot) dispatchMessage(update tgbotapi.Update, handler MessageHandler) {
 	}
 
 	// log.Printf("Date: %v\n", time.Unix(int64(update.Message.Date), 0))
-	log.Printf("From %+v: %+v\n", update.Message.From, update.Message.Text)
-	log.Printf("Type: %s\n", update.Message.Chat.Type)
+	log.Printf("From %+v (%s): %+v\n", update.Message.From, update.Message.Chat.Type, update.Message.Text)
 
 	handler.ProcessUpdate(update)
 }
@@ -109,10 +113,5 @@ func (bot Bot) logWebhookDetails() {
 
 	if info.PendingUpdateCount != 0 {
 		log.Printf("Pending updates: %d\n", info.PendingUpdateCount)
-	}
-
-	if bot.Debug {
-		log.Println("Bot debug mode is ON")
-		log.Printf("Bot buffer: %d\n", bot.Buffer)
 	}
 }

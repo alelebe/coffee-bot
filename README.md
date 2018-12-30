@@ -75,13 +75,14 @@ where:
 ### How to stop the app on Heroku
 ```
 	$ heroku ps:scale web=0
+	$ heroku ps 	*//List the dynos for an app*
 ```
 
 ### How to start the app on Heroku
 ```
 	$ git push heroku master
 	$ heroku ps:scale web=1
-	$ heroku open
+	$ heroku ps 	*//List the dynos for an app
 ```
 
 ### How to check logs on Heroku
@@ -95,9 +96,19 @@ where:
 ```
 
 ### How to debug the app locally
-    Follow steps to install debugger for Golang: https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code
-	Install Delve:
+Follow steps to install debugger for Golang:
+	https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code
+Install Delve:
 ```
 	$ xcode-select --install
 	$ go get -u github.com/derekparker/delve/cmd/dlv
+```
+
+### How to clear build cache for your app on Heroku
+	https://help.heroku.com/18PI5RSY/how-do-i-clear-the-build-cache
+```
+	$ heroku plugins:install heroku-repo
+	$ heroku repo:purge_cache -a fx-coffee-bot
+	$ git commit --allow-empty -m "Purge cache"
+	$ git push heroku master
 ```
