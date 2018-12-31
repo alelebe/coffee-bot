@@ -22,10 +22,9 @@ The full reference for CLI commands is available here:
 Unless your application was already created (see next section), please follow the steps to create new app on Heroku:
     https://devcenter.heroku.com/articles/creating-apps
 
-### Link your working Git folder with your Heroku app
+### Link your working folder with your Heroku app
 ```
-    $ heroku git:remote -a fx-coffee-bot
-    set git remote heroku to https://git.heroku.com/fx-coffee-bot.git
+    $ heroku git:remote -a fx-coffee-bot	*set git remote heroku to https://git.heroku.com/fx-coffee-bot.git*
     $ heroku info
 ```
 Basically, remote Heroku app must be configured as remote git repo. Therefore, an alternative and straighforward way to do that is:
@@ -39,11 +38,22 @@ With GitHub integration, every push to target branch in git repo on GitHub will 
     https://devcenter.heroku.com/articles/github-integration
 
 
+### Speak to BotFather
+Setup Bot commands:
+```
+	/setcommands
+	coffee - Place request for a hot beverage
+	collect - Collect all requests to purchase coffee
+	help - description of the process interaction with bot
+```
+
 ## HOWTO(s)
 
 ### How to build locally
-
-git clone https://github.com/alelebe/fx-coffee-bot
+Checkout source code:
+```
+	git clone https://github.com/alelebe/fx-coffee-bot
+```
 
 *Create new file '.env'in working directory with the following content:*
 ```property file

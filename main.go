@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -69,14 +70,14 @@ func (p Program) runLongPooling() {
 	for {
 		select {
 		case update := <-newsCh:
-			p.news.dispatchMessage(update, MessageHandler(p.news))
+			p.news.dispatchMessage(update, UpdateHandler(p.news))
 		case update := <-coffeeCh:
-			p.coffee.dispatchMessage(update, MessageHandler(p.coffee))
+			p.coffee.dispatchMessage(update, UpdateHandler(p.coffee))
 		}
 	}
 }
 
-func (p Program) configureHook(bot Bot, router *gin.Engine, handler MessageHandler) bool {
+func (p Program) configureHook(bot Bot, router *gin.Engine, handler UpdateHandler) bool {
 	var err error
 
 	err = bot.setupWebhook(p.baseURL, router, handler)
@@ -95,12 +96,12 @@ func (p Program) runRouter() {
 
 	configured := false
 	if p.news != nil {
-		if p.configureHook(p.news.Bot, router, MessageHandler(p.news)) {
+		if p.configureHook(p.news.Bot, router, UpdateHandler(p.news)) {
 			configured = true
 		}
 	}
 	if p.coffee != nil {
-		if p.configureHook(p.coffee.Bot, router, MessageHandler(p.coffee)) {
+		if p.configureHook(p.coffee.Bot, router, UpdateHandler(p.coffee)) {
 			configured = true
 		}
 	}
@@ -124,7 +125,7 @@ func getVar(env string) string {
 	return value
 }
 func getOptVar(env string, defValue string) string {
-	value := strings.ToLower(os.Getenv("ENV"))
+	value := strings.ToLower(os.Getenv(env))
 	if value == "" {
 		value = defValue
 	}
@@ -141,6 +142,7 @@ func initVars() Vars {
 	if debugStr != "" && debugStr != "0" {
 		debug = true
 	}
+	fmt.Printf("%+v, %s\n", debug, debugStr)
 
 	mode := strings.ToUpper(getVar("ENV"))
 

@@ -12,7 +12,7 @@ import (
 //NewsBot :
 type NewsBot struct {
 	Bot
-	MessageHandler
+	UpdateHandler
 
 	Feeds map[string]string
 }
@@ -55,26 +55,26 @@ func getNews(url string) (*RSS, error) {
 	return rss, nil
 }
 
-//ProcessUpdate : handling messages for the bot
-func (bot NewsBot) ProcessUpdate(update tgbotapi.Update) {
+//ProcessMessage : handling messages for the bot
+func (bot NewsBot) ProcessMessage(message tgbotapi.Message) {
 
-	if url := bot.getFeed(update.Message.Text); url != "" {
+	if url := bot.getFeed(message.Text); url != "" {
 		rss, err := getNews(url)
 		if err != nil {
 			bot.Send(tgbotapi.NewMessage(
-				update.Message.Chat.ID,
+				message.Chat.ID,
 				"sorry, error happend",
 			))
 		}
 		for _, item := range rss.Items {
 			bot.Send(tgbotapi.NewMessage(
-				update.Message.Chat.ID,
+				message.Chat.ID,
 				item.URL+"\n"+item.Title,
 			))
 		}
 	} else {
 		bot.Send(tgbotapi.NewMessage(
-			update.Message.Chat.ID,
+			message.Chat.ID,
 			`there is only Habr feed availible`,
 		))
 	}

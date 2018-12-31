@@ -10,9 +10,10 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-//MessageHandler : processing messages from BotAPI
-type MessageHandler interface {
-	ProcessUpdate(tgbotapi.Update)
+//UpdateHandler : processing messages from BotAPI
+type UpdateHandler interface {
+	ProcessMessage(tgbotapi.Message)
+	ProcessCallback(tgbotapi.CallbackQuery)
 }
 
 //Bot :
@@ -42,19 +43,27 @@ func (bot Bot) logBotDetails() {
 	}
 }
 
-func (bot Bot) dispatchMessage(update tgbotapi.Update, handler MessageHandler) {
-	if update.Message == nil { // ignore any non-Message Updates
+func (bot Bot) dispatchMessage(update tgbotapi.Update, handler UpdateHandler) {
+	if update.Message != nil {
+		// log.Printf("Date: %v\n", time.Unix(int64(update.Message.Date), 0))
+		log.Printf("From %+v (%s): %+v\n", update.Message.From, update.Message.Chat.Type, update.Message.Text)
+
+		handler.ProcessMessage(*update.Message)
+
+	} else if update.CallbackQuery != nil {
+
+		log.Printf("From %+v: %+v\n", update.CallbackQuery.From, update.CallbackQuery)
+		handler.ProcessCallback(*update.CallbackQuery)
+
+	} else {
+		// ignore any non-Message Updates
 		log.Printf("UPDATE: %+v\n", update)
 		return
 	}
 
-	// log.Printf("Date: %v\n", time.Unix(int64(update.Message.Date), 0))
-	log.Printf("From %+v (%s): %+v\n", update.Message.From, update.Message.Chat.Type, update.Message.Text)
-
-	handler.ProcessUpdate(update)
 }
 
-func (bot Bot) ginWebhook(c *gin.Context, handler MessageHandler) {
+func (bot Bot) ginWebhook(c *gin.Context, handler UpdateHandler) {
 	defer c.Request.Body.Close()
 
 	bytes, err := ioutil.ReadAll(c.Request.Body)
@@ -73,7 +82,7 @@ func (bot Bot) ginWebhook(c *gin.Context, handler MessageHandler) {
 	bot.dispatchMessage(update, handler)
 }
 
-func (bot Bot) setupWebhook(baseURL string, router *gin.Engine, handler MessageHandler) error {
+func (bot Bot) setupWebhook(baseURL string, router *gin.Engine, handler UpdateHandler) error {
 	var err error
 
 	base, err := url.Parse(baseURL)
