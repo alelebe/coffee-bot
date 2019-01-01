@@ -12,20 +12,20 @@ type CoffeeBot struct {
 	activeChats map[int64]CoffeeChat
 }
 
-func (bot CoffeeBot) getCoffeeChat(chat *tgbotapi.Chat) CoffeeChat {
-	if activeChat, ok := bot.activeChats[chat.ID]; ok {
+func (bot CoffeeBot) getActiveChat(chatID int64) CoffeeChat {
+	if activeChat, ok := bot.activeChats[chatID]; ok {
 		return activeChat
 	}
 
-	newChat := initCoffeeChat(bot.Bot, chat)
-	bot.activeChats[chat.ID] = newChat
+	newChat := initCoffeeChat(bot.Bot, chatID)
+	bot.activeChats[chatID] = newChat
 	return newChat
 }
 
 //ProcessMessage : handling messages for the bot
 func (bot CoffeeBot) ProcessMessage(message tgbotapi.Message) {
 
-	chat := bot.getCoffeeChat(message.Chat)
+	chat := bot.getActiveChat(message.Chat.ID)
 
 	if message.Text[0] == '/' {
 		go chat.newCommand(message)
@@ -37,7 +37,7 @@ func (bot CoffeeBot) ProcessMessage(message tgbotapi.Message) {
 //ProcessCallback :
 func (bot CoffeeBot) ProcessCallback(callback tgbotapi.CallbackQuery) {
 
-	chat := bot.getCoffeeChat(callback.Message.Chat)
+	chat := bot.getActiveChat(callback.Message.Chat.ID)
 	chat.callbackQuery(callback)
 }
 
