@@ -12,7 +12,7 @@ type CoffeeBot struct {
 	activeChats map[int64]CoffeeChat
 }
 
-func (bot CoffeeBot) getActiveChat(chatID int64) CoffeeChat {
+func (bot *CoffeeBot) getActiveChat(chatID int64) CoffeeChat {
 	if activeChat, ok := bot.activeChats[chatID]; ok {
 		return activeChat
 	}
@@ -23,7 +23,7 @@ func (bot CoffeeBot) getActiveChat(chatID int64) CoffeeChat {
 }
 
 //ProcessMessage : handling messages for the bot
-func (bot CoffeeBot) ProcessMessage(message tgbotapi.Message) {
+func (bot *CoffeeBot) ProcessMessage(message tgbotapi.Message) {
 
 	chat := bot.getActiveChat(message.Chat.ID)
 
@@ -35,7 +35,7 @@ func (bot CoffeeBot) ProcessMessage(message tgbotapi.Message) {
 }
 
 //ProcessCallback :
-func (bot CoffeeBot) ProcessCallback(callback tgbotapi.CallbackQuery) {
+func (bot *CoffeeBot) ProcessCallback(callback tgbotapi.CallbackQuery) {
 
 	chat := bot.getActiveChat(callback.Message.Chat.ID)
 	chat.callbackQuery(callback)

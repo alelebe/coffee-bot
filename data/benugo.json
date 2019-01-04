@@ -1,0 +1,75 @@
+{
+    "Title": "Benugo (2nd Floor)",
+    "Bewerages": [
+        {
+            "Display": "Cappuchino",
+            "SubItems": [
+                {
+                    "Name": "Cappuchino",
+                    "Display": "With chocolate",
+                    "Price": 1.90
+                },
+                {
+                    "Name": "Cappuchino NO chocolate",
+                    "Display": "No chocolate",
+                    "Price": 1.90
+                }
+            ]
+        },
+        {
+            "Display": "Americano",
+            "SubItems": [
+                {
+                    "Name": "Americano",
+                    "Display": "Black",
+                    "Price": 1.99
+                },
+                {
+                    "Name": "White Americano",
+                    "Display": "White",
+                    "Price": 1.90
+                }
+            ]
+        },
+        {
+            "Display": "Flat White",
+            "Name": "Flat White",
+            "Price": 1.90
+        },
+        {
+            "Display": "Mochiato",
+            "Name": "Mochiato",
+            "Price": 1.90
+        },
+        {
+            "Display": "Espresso",
+            "SubItems": [
+                {
+                    "Name": "Espresso (single)",
+                    "Display": "Single",
+                    "Price": 1.99
+                },
+                {
+                    "Name": "Espresso (double)",
+                    "Display": "Double",
+                    "Price": 1.99
+                }
+            ]
+        },
+        {
+            "Display": "Tea",
+            "SubItems": [
+                {
+                    "Name": "Tea with milk",
+                    "Display": "Tea with milk",
+                    "Price": 1.99
+                },
+                {
+                    "Name": "Black tea",
+                    "Display": "Black tea",
+                    "Price": 1.99
+                }
+            ]
+        }
+    ]
+}

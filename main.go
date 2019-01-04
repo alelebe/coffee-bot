@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -142,7 +141,6 @@ func initVars() Vars {
 	if debugStr != "" && debugStr != "0" {
 		debug = true
 	}
-	fmt.Printf("%+v, %s\n", debug, debugStr)
 
 	mode := strings.ToUpper(getVar("ENV"))
 

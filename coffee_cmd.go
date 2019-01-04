@@ -3,10 +3,16 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
+
+type node struct {
+	item   *Drink
+	parent *Drink
+}
 
 //CoffeeCmd :
 type CoffeeCmd struct {
@@ -14,23 +20,46 @@ type CoffeeCmd struct {
 	initialMsg tgbotapi.Message
 	chatID     int64
 
+	drinks      []Drink
+	allDrinks   map[string]node
 	lastMessage *tgbotapi.Message
 }
 
-func (p CoffeeCmd) start() {
-	buttons := tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Cappuchino", "Cappuchino"),
-			tgbotapi.NewInlineKeyboardButtonData("Americano", "Americano"),
-		))
+func buildKeyboard(drinks []Drink) [][]tgbotapi.InlineKeyboardButton {
+	var keyboard [][]tgbotapi.InlineKeyboardButton
+
+	numOfRows := len(drinks) / 2
+	row := 0
+	for idx := 0; idx < len(drinks); idx++ {
+		item := drinks[idx]
+
+		if row < numOfRows {
+			nextItem := drinks[idx+1]
+			keys := tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData(item.Display, item.Display),
+				tgbotapi.NewInlineKeyboardButtonData(nextItem.Display, nextItem.Display),
+			)
+			idx++
+			keyboard = append(keyboard, keys)
+		} else {
+			keys := tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData(item.Display, item.Display),
+			)
+			keyboard = append(keyboard, keys)
+		}
+	}
+	return keyboard
+}
+
+func (p *CoffeeCmd) start() {
 
 	msg := tgbotapi.NewMessage(
 		p.chatID,
 		"Choose a drink from the list below:",
 	)
-	// msg.BaseChat.ReplyToMessageID = original.MessageID
-	msg.BaseChat.ReplyMarkup = buttons
-	p.Send(msg)
+	msg.BaseChat.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(buildKeyboard(p.drinks)...)
+	sent, _ := p.Send(msg)
+	p.lastMessage = &sent
 }
 
 func (p *CoffeeCmd) cancel() {
@@ -93,11 +122,33 @@ func (p *CoffeeCmd) nextStep(callback tgbotapi.CallbackQuery) {
 	}
 }
 
+func buildTree(parent *Drink, drinks []Drink, tree map[string]node) {
+	for _, item := range drinks {
+		tree[item.Display] = node{
+			item:   &item,
+			parent: parent,
+		}
+		buildTree(&item, item.SubItems, tree)
+	}
+}
+
 func initCoffeeCmd(bot Bot, message tgbotapi.Message) *CoffeeCmd {
 	newCmd := &CoffeeCmd{
 		Bot:        bot,
 		initialMsg: message,
 		chatID:     message.Chat.ID,
 	}
+	const filePath = "./data/benugo.json"
+	menu, err := loadBewerages(filePath)
+	if err != nil {
+		dir, _ := os.Getwd()
+		log.Printf("%s", dir)
+		log.Fatal(err)
+	}
+	newCmd.drinks = menu.Bewerages
+	newCmd.allDrinks = make(map[string]node, 0)
+	buildTree(nil, newCmd.drinks, newCmd.allDrinks)
+	log.Printf("Loaded hot bewerages from %s", filePath)
+	log.Printf("Number of available items: %d\n", len(newCmd.allDrinks))
 	return newCmd
 }
