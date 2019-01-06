@@ -28,6 +28,21 @@ func TestLoadBewerages(t *testing.T) {
 	if len(all) <= size {
 		t.Errorf("'%s' has weird number of _all_ drinks, all: %d, total: %d", filePath, len(all), size)
 	}
+
+	for _, it := range all {
+		if it.ID == "" {
+			t.Errorf("'%s'has item with empty/blank ID: %+v", filePath, it)
+		}
+		if it.Display == "" {
+			t.Errorf("'%s'has item with empty/blank Display: %+v", filePath, it)
+		}
+		if it.Price == 0 && it.Entry.Items == nil {
+			t.Errorf("'%s'has item without Price: %+v", filePath, it)
+		}
+		if it.Entry.Items != nil && it.Entry.Question == "" {
+			t.Errorf("'%s'has item without Question: %+v", filePath, it)
+		}
+	}
 }
 
 func TestGetDrinkItem(t *testing.T) {

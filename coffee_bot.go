@@ -41,15 +41,16 @@ func (p *CoffeeBot) ProcessMessage(message tgbotapi.Message) {
 func (p *CoffeeBot) ProcessCallback(callback tgbotapi.CallbackQuery) {
 
 	chat := p.getActiveChat(callback.Message.Chat.ID)
-	if chat == nil {
-		log.Printf("Coffee Bot can't find active chat by ID: %d", callback.Message.Chat.ID)
-
-		p.notifyUser(callback, "Please start again")
-		p.removeInlineKeyboard(callback)
-
-	} else {
-		chat.callbackQuery(callback)
+	if chat != nil && chat.callbackQuery(callback) {
+		return
 	}
+
+	//Error handling
+	if chat == nil {
+		log.Printf("Coffee Bot: Can't find active chat by ID: %d", callback.Message.Chat.ID)
+	}
+	p.notifyUser(callback, "Please start again")
+	// p.removeInlineKeyboard(callback)
 }
 
 func initCoffeeBot(token string, debug bool) *CoffeeBot {

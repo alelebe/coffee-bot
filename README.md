@@ -113,6 +113,23 @@ Install Delve:
 	$ xcode-select --install
 	$ go get -u github.com/derekparker/delve/cmd/dlv
 ```
+Create .vscode/launch.json with standard configuration:
+```
+        {
+            "name": "Launch",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}",
+            "env": {
+                "ENV":"local",
+                "DEBUG_BOT":"1",
+                "NEWS_TOKEN":"<your token>",
+                "COFFEE_TOKEN":"<your token>"
+            },
+            "args": []
+        }
+```
 
 ### How to clear build cache for your app on Heroku
 	https://help.heroku.com/18PI5RSY/how-do-i-clear-the-build-cache

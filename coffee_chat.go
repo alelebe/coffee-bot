@@ -43,7 +43,9 @@ func (p *CoffeeChat) newCommand(message tgbotapi.Message) bool {
 		// 	p.coffeeCmd.cancel()
 		// 	break
 		// }
-		p.coffeeCmd = initCoffeeCmd(p.Bot, message)
+		if p.coffeeCmd == nil {
+			p.coffeeCmd = initCoffeeCmd(p.Bot, message)
+		}
 		p.coffeeCmd.start()
 
 	case "/collect":
@@ -54,23 +56,15 @@ func (p *CoffeeChat) newCommand(message tgbotapi.Message) bool {
 	return true
 }
 
-func (p *CoffeeChat) callbackQuery(callback tgbotapi.CallbackQuery) {
+func (p *CoffeeChat) callbackQuery(callback tgbotapi.CallbackQuery) bool {
 
 	if p.coffeeCmd != nil {
 		msg := p.coffeeCmd.isReplyOnMyMessage(callback)
 		if msg != nil {
 			p.coffeeCmd.onCallback(callback, *msg)
-			return
+			return true
 		}
 	}
-
-	p.outdatedQuery(callback)
-}
-
-func (p Bot) outdatedQuery(callback tgbotapi.CallbackQuery) {
 	log.Printf("Old callback.Data '%s', skipping...", callback.Data)
-
-	//message is not valid any more -- delete it!
-	p.notifyUser(callback, "Sorry! that choice isn't available in my memory...")
-	p.removeInlineKeyboard(callback)
+	return false
 }
