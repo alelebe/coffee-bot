@@ -50,7 +50,7 @@ func (p *CoffeeChat) newCommand(message tgbotapi.Message) bool {
 
 	case "/collect":
 	default:
-		p.replyToMessage(message, "I'm sorry. I don't understand the command")
+		p.replyToMessage(message, "I'm sorry... I don't understand your command...")
 		return false
 	}
 	return true

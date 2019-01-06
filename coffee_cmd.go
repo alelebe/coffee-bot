@@ -158,7 +158,7 @@ func (p *CoffeeCmd) nextQuestion(callback tgbotapi.CallbackQuery, drink Drink) {
 
 	if drink.Entry.Items == nil {
 		//confirm chosen drink
-		p.updateMessageWithMarkdown(callback, fmt.Sprintf("Please confirm your choice:\n*%s*\nPrice: £%.2f", drink.ID, drink.Price))
+		p.updateMessageWithMarkdown(callback, fmt.Sprintf("Please confirm your choice:\n*%s*\n£%.2f", drink.ID, drink.Price))
 		p.updateInlineKeyboard(callback, confirmChosenDrink(drink))
 
 	} else {

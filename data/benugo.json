@@ -34,7 +34,7 @@
                             "Price": 1.99
                         },
                         {
-                            "ID": "White americano",
+                            "ID": "Americano with milk",
                             "Display": "White",
                             "Price": 1.90
                         }
@@ -60,10 +60,10 @@
                         {
                             "ID": "Espresso (single)",
                             "Display": "Single",
-                            "Price": 1.99
+                            "Price": 1.80
                         },
                         {
-                            "ID": "Espresso (double)",
+                            "ID": "Double Espresso",
                             "Display": "Double",
                             "Price": 1.99
                         }
@@ -79,12 +79,12 @@
                         {
                             "ID": "Black Tea",
                             "Display": "Black tea",
-                            "Price": 1.99
+                            "Price": 1.90
                         },
                         {
                             "ID": "Tea and milk",
                             "Display": "White tea",
-                            "Price": 1.99
+                            "Price": 1.90
                         }
                     ]
                 }
