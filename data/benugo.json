@@ -1,75 +1,94 @@
 {
     "Title": "Benugo (2nd Floor)",
-    "Bewerages": [
-        {
-            "Display": "Cappuchino",
-            "SubItems": [
-                {
-                    "Name": "Cappuchino",
-                    "Display": "With chocolate",
-                    "Price": 1.90
-                },
-                {
-                    "Name": "Cappuchino NO chocolate",
-                    "Display": "No chocolate",
-                    "Price": 1.90
+    "Entry": {
+        "Question": "Choose a drink from the list below:",
+        "Items": [
+            {
+                "ID": "Cappuccino [group]",
+                "Display": "Cappuccino",
+                "Entry": {
+                    "Question": "Would you like some chocolate on top?",
+                    "Items": [
+                        {
+                            "ID": "Cappuccino",
+                            "Display": "Yes, please",
+                            "Price": 1.90
+                        },
+                        {
+                            "ID": "Cappuccino no chocolate",
+                            "Display": "No, thanks",
+                            "Price": 1.90
+                        }
+                    ]
                 }
-            ]
-        },
-        {
-            "Display": "Americano",
-            "SubItems": [
-                {
-                    "Name": "Americano",
-                    "Display": "Black",
-                    "Price": 1.99
-                },
-                {
-                    "Name": "White Americano",
-                    "Display": "White",
-                    "Price": 1.90
+            },
+            {
+                "ID": "Americano [group]",
+                "Display": "Americano",
+                "Entry": {
+                    "Question": "Black or White?",
+                    "Items": [
+                        {
+                            "ID": "Black coffee",
+                            "Display": "Black",
+                            "Price": 1.99
+                        },
+                        {
+                            "ID": "White americano",
+                            "Display": "White",
+                            "Price": 1.90
+                        }
+                    ]
                 }
-            ]
-        },
-        {
-            "Display": "Flat White",
-            "Name": "Flat White",
-            "Price": 1.90
-        },
-        {
-            "Display": "Mochiato",
-            "Name": "Mochiato",
-            "Price": 1.90
-        },
-        {
-            "Display": "Espresso",
-            "SubItems": [
-                {
-                    "Name": "Espresso (single)",
-                    "Display": "Single",
-                    "Price": 1.99
-                },
-                {
-                    "Name": "Espresso (double)",
-                    "Display": "Double",
-                    "Price": 1.99
+            },
+            {
+                "ID": "Flat White",
+                "Display": "Flat White",
+                "Price": 1.90
+            },
+            {
+                "ID": "Macchiato",
+                "Display": "Macchiato",
+                "Price": 1.90
+            },
+            {
+                "ID": "Espresso",
+                "Display": "Espresso",
+                "Entry": {
+                    "Question": "Single or double?",
+                    "Items": [
+                        {
+                            "ID": "Espresso (single)",
+                            "Display": "Single",
+                            "Price": 1.99
+                        },
+                        {
+                            "ID": "Espresso (double)",
+                            "Display": "Double",
+                            "Price": 1.99
+                        }
+                    ]
                 }
-            ]
-        },
-        {
-            "Display": "Tea",
-            "SubItems": [
-                {
-                    "Name": "Tea with milk",
-                    "Display": "Tea with milk",
-                    "Price": 1.99
-                },
-                {
-                    "Name": "Black tea",
-                    "Display": "Black tea",
-                    "Price": 1.99
+            },
+            {
+                "ID": "Tea",
+                "Display": "Tea",
+                "Entry": {
+                    "Question": "Would you like some milk?",
+                    "Items": [
+                        {
+                            "ID": "Black Tea",
+                            "Display": "Black tea",
+                            "Price": 1.99
+                        },
+                        {
+                            "ID": "Tea and milk",
+                            "Display": "White tea",
+                            "Price": 1.99
+                        }
+                    ]
                 }
-            ]
-        }
-    ]
+            }
+        ]
+    }
 }

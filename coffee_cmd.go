@@ -4,15 +4,20 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
+	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-type node struct {
-	item   *Drink
-	parent *Drink
-}
+const (
+	btnOK     = "OK"
+	btnCANCEL = "Cancel"
+)
+
+// type node struct {
+// 	item   *Drink
+// 	parent *Drink
+// }
 
 //CoffeeCmd :
 type CoffeeCmd struct {
@@ -20,12 +25,12 @@ type CoffeeCmd struct {
 	initialMsg tgbotapi.Message
 	chatID     int64
 
-	drinks      []Drink
-	allDrinks   map[string]node
-	lastMessage *tgbotapi.Message
+	entry Bewerages
+	// allDrinks  map[string]node
+	myMessages map[int]tgbotapi.Message
 }
 
-func buildKeyboard(drinks []Drink) [][]tgbotapi.InlineKeyboardButton {
+func chooseOneDrinkKeyboard(drinks []Drink, hasBackButton bool) [][]tgbotapi.InlineKeyboardButton {
 	var keyboard [][]tgbotapi.InlineKeyboardButton
 
 	numOfRows := len(drinks) / 2
@@ -36,14 +41,14 @@ func buildKeyboard(drinks []Drink) [][]tgbotapi.InlineKeyboardButton {
 		if row < numOfRows {
 			nextItem := drinks[idx+1]
 			keys := tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonData(item.Display, item.Display),
-				tgbotapi.NewInlineKeyboardButtonData(nextItem.Display, nextItem.Display),
+				tgbotapi.NewInlineKeyboardButtonData(item.Display, item.ID),
+				tgbotapi.NewInlineKeyboardButtonData(nextItem.Display, nextItem.ID),
 			)
 			idx++
 			keyboard = append(keyboard, keys)
 		} else {
 			keys := tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonData(item.Display, item.Display),
+				tgbotapi.NewInlineKeyboardButtonData(item.Display, item.ID),
 			)
 			keyboard = append(keyboard, keys)
 		}
@@ -51,93 +56,125 @@ func buildKeyboard(drinks []Drink) [][]tgbotapi.InlineKeyboardButton {
 	return keyboard
 }
 
+func confirmDrinkKeyboard(item Drink) [][]tgbotapi.InlineKeyboardButton {
+	var keyboard [][]tgbotapi.InlineKeyboardButton
+
+	keyboard = append(keyboard, tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonData(btnOK, fmt.Sprintf("%s::%s", btnOK, item.ID)),
+		tgbotapi.NewInlineKeyboardButtonData(btnCANCEL, fmt.Sprintf("%s::%s", btnCANCEL, item.ID)),
+	))
+	return keyboard
+}
+
 func (p *CoffeeCmd) start() {
 
-	msg := tgbotapi.NewMessage(
-		p.chatID,
-		"Choose a drink from the list below:",
+	sent, err := p.replyToMessageWithInlineKeyboard(
+		p.initialMsg, p.entry.Question,
+		chooseOneDrinkKeyboard(p.entry.Items, false),
 	)
-	msg.BaseChat.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(buildKeyboard(p.drinks)...)
-	sent, _ := p.Send(msg)
-	p.lastMessage = &sent
-}
-
-func (p *CoffeeCmd) cancel() {
-	if p.lastMessage != nil {
-		p.Send(
-			tgbotapi.NewDeleteMessage(
-				p.chatID,
-				p.lastMessage.MessageID,
-			))
-		p.lastMessage = nil
+	if err == nil {
+		p.myMessages[sent.MessageID] = sent
 	}
 }
 
-func isSameDate(date1 int, date2 int) bool {
-	y1, m1, d1 := time.Unix(int64(date1), 0).Date()
-	y2, m2, d2 := time.Unix(int64(date2), 0).Date()
-	return y1 == y2 && m1 == m2 && d1 == d2
-}
+// func (p *CoffeeCmd) cancel() {
+// 	if p.lastMessage != nil {
+// 		p.Send(
+// 			tgbotapi.NewDeleteMessage(
+// 				p.chatID,
+// 				p.lastMessage.MessageID,
+// 		))
+// 		p.lastMessage = nil
+// 	}
+// }
 
-func (p *CoffeeCmd) nextStep(callback tgbotapi.CallbackQuery) {
-	if p.lastMessage == nil {
-		log.Printf("CoffeeCmd: Last message is empty\n")
-		return
-	}
-	if p.lastMessage.MessageID != callback.Message.MessageID {
-		log.Printf("CoffeeCmd: Callback is called on wrong message\n")
-		if isSameDate(p.lastMessage.Date, callback.Message.Date) {
-			p.Send(
-				tgbotapi.NewDeleteMessage(
-					p.chatID,
-					callback.Message.MessageID,
-				))
+// func isSameDate(date1 int, date2 int) bool {
+// 	y1, m1, d1 := time.Unix(int64(date1), 0).Date()
+// 	y2, m2, d2 := time.Unix(int64(date2), 0).Date()
+// 	return y1 == y2 && m1 == m2 && d1 == d2
+// }
+
+func (p CoffeeCmd) isReplyOnMyMessage(callback tgbotapi.CallbackQuery) *tgbotapi.Message {
+	if callback.Message != nil {
+		if msg, ok := p.myMessages[callback.Message.MessageID]; ok {
+			return &msg
 		}
-		return
 	}
-
-	p.AnswerCallbackQuery(
-		tgbotapi.NewCallback(
-			callback.ID,
-			fmt.Sprintf("%s\nGood choice!", callback.Data),
-		))
-
-	msg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, "Would you like some chocolate on top?")
-	_, err := p.Send(msg)
-	if err != nil {
-		log.Printf("Failed to edit message: %v\n", err)
-	}
-	msg2 := tgbotapi.NewEditMessageReplyMarkup(
-		callback.Message.Chat.ID,
-		callback.Message.MessageID,
-		tgbotapi.NewInlineKeyboardMarkup(
-			tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonData("Yes, please", "1"),
-				tgbotapi.NewInlineKeyboardButtonData("No, thanks", "0"),
-			)),
-	)
-	_, err = p.Send(msg2)
-	if err != nil {
-		log.Printf("Failed to edit message: %v\n", err)
-	}
+	return nil
 }
 
-func buildTree(parent *Drink, drinks []Drink, tree map[string]node) {
-	for _, item := range drinks {
-		tree[item.Display] = node{
-			item:   &item,
-			parent: parent,
+func (p *CoffeeCmd) onCallback(callback tgbotapi.CallbackQuery, myMessage tgbotapi.Message) {
+
+	var ID string
+	var Button string
+	var drink *Drink
+
+	//buttons: OK, Cancel
+	split := strings.Split(callback.Data, "::")
+	switch len(split) {
+	case 2:
+		Button = split[0]
+		ID = split[1]
+		drink = p.entry.getDrinkByID(ID)
+	case 1:
+		ID = split[0]
+		drink = p.entry.getDrinkByID(ID)
+	}
+	if drink == nil {
+		p.notifyUser(callback, "Something went wrong, sorry...")
+	} else {
+		switch Button {
+		case "": //no button, drink has been selected!
+			p.onSelectDrink(callback, *drink)
+
+		case btnOK:
+			p.onConfirmDrink(callback, *drink)
+
+		case btnCANCEL:
+			p.updateMessage(callback, "Request aborted...")
+			p.removeInlineKeyboard(callback)
 		}
-		buildTree(&item, item.SubItems, tree)
 	}
 }
+
+func (p *CoffeeCmd) onConfirmDrink(callback tgbotapi.CallbackQuery, drink Drink) {
+}
+
+func (p *CoffeeCmd) onSelectDrink(callback tgbotapi.CallbackQuery, drink Drink) {
+
+	log.Printf("Selected: %+v", drink)
+
+	if drink.Entry.Items == nil {
+		p.notifyUser(callback, "Good choice!")
+		p.removeInlineKeyboard(callback)
+		p.updateMessageWithMarkdown(callback, fmt.Sprintf("Please confirm your choice:\n*%s*\nPrice: £%f", drink.ID, drink.Price))
+		p.updateInlineKeyboard(callback, confirmDrinkKeyboard(drink))
+
+	} else {
+		//next question
+		p.updateMessage(callback, drink.Entry.Question)
+		p.updateInlineKeyboard(callback, chooseOneDrinkKeyboard(drink.Entry.Items, true))
+	}
+}
+
+// func buildTree(parent *Drink, drinks []Drink, tree map[string]node) {
+// 	for _, item := range drinks {
+// 		tree[item.Display] = node{
+// 			item:   &item,
+// 			parent: parent,
+// 		}
+// 		buildTree(&item, item.SubItems, tree)
+// 	}
+// }
 
 func initCoffeeCmd(bot Bot, message tgbotapi.Message) *CoffeeCmd {
 	newCmd := &CoffeeCmd{
 		Bot:        bot,
 		initialMsg: message,
 		chatID:     message.Chat.ID,
+		myMessages: make(map[int]tgbotapi.Message),
 	}
+
 	const filePath = "./data/benugo.json"
 	menu, err := loadBewerages(filePath)
 	if err != nil {
@@ -145,10 +182,10 @@ func initCoffeeCmd(bot Bot, message tgbotapi.Message) *CoffeeCmd {
 		log.Printf("%s", dir)
 		log.Fatal(err)
 	}
-	newCmd.drinks = menu.Bewerages
-	newCmd.allDrinks = make(map[string]node, 0)
-	buildTree(nil, newCmd.drinks, newCmd.allDrinks)
-	log.Printf("Loaded hot bewerages from %s", filePath)
-	log.Printf("Number of available items: %d\n", len(newCmd.allDrinks))
+	newCmd.entry = menu.Entry
+	// newCmd.allDrinks = make(map[string]node, 0)
+	// buildTree(nil, newCmd.drinks, newCmd.allDrinks)
+	all := newCmd.entry.getAllEntries()
+	log.Printf("Bewerages loaded from file: %s, available items: %d", filePath, len(all))
 	return newCmd
 }

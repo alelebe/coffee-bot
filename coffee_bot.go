@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
@@ -9,36 +11,45 @@ type CoffeeBot struct {
 	Bot
 	UpdateHandler
 
-	activeChats map[int64]CoffeeChat
+	activeChats map[int64]*CoffeeChat
 }
 
-func (bot *CoffeeBot) getActiveChat(chatID int64) CoffeeChat {
-	if activeChat, ok := bot.activeChats[chatID]; ok {
+func (p *CoffeeBot) getActiveChat(chatID int64) *CoffeeChat {
+	if activeChat, ok := p.activeChats[chatID]; ok {
 		return activeChat
 	}
-
-	newChat := initCoffeeChat(bot.Bot, chatID)
-	bot.activeChats[chatID] = newChat
-	return newChat
+	return nil
 }
 
 //ProcessMessage : handling messages for the bot
-func (bot *CoffeeBot) ProcessMessage(message tgbotapi.Message) {
+func (p *CoffeeBot) ProcessMessage(message tgbotapi.Message) {
 
-	chat := bot.getActiveChat(message.Chat.ID)
+	chat := p.getActiveChat(message.Chat.ID)
+	if chat == nil {
+		chat = initCoffeeChat(p.Bot, message.Chat.ID)
+		p.activeChats[message.Chat.ID] = chat
+	}
 
 	if message.Text[0] == '/' {
-		go chat.newCommand(message)
+		chat.newCommand(message)
 	} else {
-		go chat.newMessage(message)
+		chat.newMessage(message)
 	}
 }
 
 //ProcessCallback :
-func (bot *CoffeeBot) ProcessCallback(callback tgbotapi.CallbackQuery) {
+func (p *CoffeeBot) ProcessCallback(callback tgbotapi.CallbackQuery) {
 
-	chat := bot.getActiveChat(callback.Message.Chat.ID)
-	chat.callbackQuery(callback)
+	chat := p.getActiveChat(callback.Message.Chat.ID)
+	if chat == nil {
+		log.Printf("Coffee Bot can't find active chat by ID: %d", callback.Message.Chat.ID)
+
+		p.notifyUser(callback, "Please start again")
+		p.removeInlineKeyboard(callback)
+
+	} else {
+		chat.callbackQuery(callback)
+	}
 }
 
 func initCoffeeBot(token string, debug bool) *CoffeeBot {
@@ -51,7 +62,7 @@ func initCoffeeBot(token string, debug bool) *CoffeeBot {
 			"Coffee Bot",
 			initBotAPI(token, debug),
 		},
-		activeChats: map[int64]CoffeeChat{},
+		activeChats: map[int64]*CoffeeChat{},
 	}
 
 	bot.logBotDetails()

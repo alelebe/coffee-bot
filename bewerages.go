@@ -8,28 +8,33 @@ import (
 
 //Menu :
 type Menu struct {
-	Title     string
-	Bewerages []Drink
+	Title string
+	Entry Bewerages
+}
+
+// Bewerages :
+type Bewerages struct {
+	Question string
+	Items    []Drink
 }
 
 //Drink : hot bewerages available at the caffee
 type Drink struct {
-	Display  string
-	Name     string  `json:",omitempty"`
-	Price    float64 `json:",omitempty"`
-	SubItems []Drink
-	Question string `json:",omitempty"`
+	ID      string
+	Display string
+	Price   float64 `json:",omitempty"`
+	Entry   Bewerages
 }
 
 //DrinkIterFunc :
 type DrinkIterFunc func(item Drink) bool
 
-func traverse(input []Drink, callback DrinkIterFunc) *Drink {
-	for _, item := range input {
-		if callback(item) {
-			return &item
+func traverse(items []Drink, callback DrinkIterFunc) *Drink {
+	for _, it := range items {
+		if callback(it) {
+			return &it
 		}
-		r := traverse(item.SubItems, callback)
+		r := traverse(it.Entry.Items, callback)
 		if r != nil {
 			return r
 		}
@@ -37,34 +42,27 @@ func traverse(input []Drink, callback DrinkIterFunc) *Drink {
 	return nil
 }
 
-func allNamedDrinks(bewerages []Drink) []Drink {
-	output := make([]Drink, 0, len(bewerages))
-	f := func(item Drink) bool {
-		if item.Name != "" {
-			output = append(output, item)
-		}
-		return false
-	}
-	traverse(bewerages, f)
-	return output
-}
-
-func allDrinks(bewerages []Drink) []Drink {
-	output := make([]Drink, 0, len(bewerages))
+func (entry Bewerages) getAllEntries() []Drink {
+	output := make([]Drink, 0, len(entry.Items))
 	f := func(item Drink) bool {
 		output = append(output, item)
 		return false
 	}
-	traverse(bewerages, f)
+	traverse(entry.Items, f)
 	return output
 }
 
-func numberOfDrinks(drinks []Drink) int {
-	num := len(drinks)
-	for _, item := range drinks {
-		num += numberOfDrinks(item.SubItems)
+func (entry Bewerages) getDrinkByID(ID string) *Drink {
+	var item *Drink
+	f := func(it Drink) bool {
+		if it.ID == ID {
+			item = &it
+			return true
+		}
+		return false
 	}
-	return num
+	traverse(entry.Items, f)
+	return item
 }
 
 func loadBewerages(filePath string) (*Menu, error) {

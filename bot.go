@@ -52,7 +52,7 @@ func (bot Bot) dispatchMessage(update tgbotapi.Update, handler UpdateHandler) {
 
 	} else if update.CallbackQuery != nil {
 
-		log.Printf("From %+v: %+v\n", update.CallbackQuery.From, update.CallbackQuery)
+		log.Printf("Callback >> From %+v: %s\n", update.CallbackQuery.From, update.CallbackQuery.Data)
 		handler.ProcessCallback(*update.CallbackQuery)
 
 	} else {
@@ -123,4 +123,71 @@ func (bot Bot) logWebhookDetails() {
 	if info.PendingUpdateCount != 0 {
 		log.Printf("Pending updates: %d\n", info.PendingUpdateCount)
 	}
+}
+
+func (bot Bot) notifyUser(callback tgbotapi.CallbackQuery, text string) {
+	bot.AnswerCallbackQuery(
+		tgbotapi.NewCallback(
+			callback.ID,
+			text,
+		))
+}
+
+func (bot Bot) replyToMessage(message tgbotapi.Message, text string) (tgbotapi.Message, error) {
+	return bot.Send(
+		tgbotapi.NewMessage(
+			message.Chat.ID,
+			text,
+		))
+}
+
+func (bot Bot) replyToMessageWithInlineKeyboard(message tgbotapi.Message, text string,
+	keyboard [][]tgbotapi.InlineKeyboardButton) (tgbotapi.Message, error) {
+
+	msg := tgbotapi.NewMessage(
+		message.Chat.ID,
+		text,
+	)
+	msg.BaseChat.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(keyboard...)
+
+	return bot.Send(msg)
+}
+
+func (bot Bot) updateMessage(callback tgbotapi.CallbackQuery, text string) {
+	bot.Send(
+		tgbotapi.NewEditMessageText(
+			callback.Message.Chat.ID,
+			callback.Message.MessageID,
+			text,
+		))
+}
+
+func (bot Bot) updateMessageWithMarkdown(callback tgbotapi.CallbackQuery, text string) {
+	msg := tgbotapi.NewEditMessageText(
+		callback.Message.Chat.ID,
+		callback.Message.MessageID,
+		text,
+	)
+	msg.ParseMode = "Markdown"
+
+	bot.Send(msg)
+}
+
+func (bot Bot) updateInlineKeyboard(callback tgbotapi.CallbackQuery, keyboard [][]tgbotapi.InlineKeyboardButton) {
+	bot.Send(
+		tgbotapi.NewEditMessageReplyMarkup(
+			callback.Message.Chat.ID,
+			callback.Message.MessageID,
+			tgbotapi.NewInlineKeyboardMarkup(
+				keyboard...,
+			),
+		))
+}
+
+func (bot Bot) removeInlineKeyboard(callback tgbotapi.CallbackQuery) {
+	bot.Send(
+		tgbotapi.NewEditMessageReplyMarkup(
+			callback.Message.Chat.ID, callback.Message.MessageID,
+			tgbotapi.NewInlineKeyboardMarkup(make([]tgbotapi.InlineKeyboardButton, 0)),
+		))
 }
