@@ -139,3 +139,33 @@ Create .vscode/launch.json with standard configuration:
 	$ git commit --allow-empty -m "Purge cache"
 	$ git push heroku master
 ```
+
+## Set up Memcache
+
+Based on Heroku article: https://devcenter.heroku.com/articles/gin-memcache
+
+### Verify Heroku account
+
+Please verify your account to install this add-on plan (please enter a credit card) For more information, see
+ ▸    https://devcenter.heroku.com/categories/billing 
+ ▸    Verify now at https://heroku.com/verify
+
+### Add MemCachier Addon to your application
+```
+	$ heroku addons:create memcachier:dev
+	$ govendor fetch github.com/memcachier/mc
+```
+
+### Install MemCachier locally
+```
+	$ brew install memcached
+```
+	==> memcached
+	To have launchd start memcached now and restart at login:
+	```
+  		$ brew services start memcached
+	```
+	Or, if you don't want/need a background service you can just run:
+	```
+		$ /usr/local/opt/memcached/bin/memcached
+	```

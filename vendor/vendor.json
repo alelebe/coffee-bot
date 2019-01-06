@@ -135,6 +135,12 @@
 			"revisionTime": "2018-08-30T10:17:45Z"
 		},
 		{
+			"checksumSHA1": "I7hCxGuY6t4tnD/KQMxqCTqH428=",
+			"path": "github.com/memcachier/mc",
+			"revision": "5d1620e2c6d86be00ea70065e3c1301ee1cb1894",
+			"revisionTime": "2018-11-03T13:09:39Z"
+		},
+		{
 			"checksumSHA1": "ZTcgWKWHsrX0RXYVXn5Xeb8Q0go=",
 			"path": "github.com/modern-go/concurrent",
 			"revision": "bacd9c7ef1dd9b15be4a9909b8ac7a4e313eec94",

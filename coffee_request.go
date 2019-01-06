@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
@@ -14,8 +15,8 @@ const (
 	btnBACK    = "<< Back"
 )
 
-//CoffeeCmd :
-type CoffeeCmd struct {
+//CoffeeRequest :
+type CoffeeRequest struct {
 	Bot
 	initialMsg tgbotapi.Message
 	chatID     int64
@@ -69,7 +70,7 @@ func confirmChosenDrink(item Drink) [][]tgbotapi.InlineKeyboardButton {
 	return keyboard
 }
 
-func (p *CoffeeCmd) start() {
+func (p *CoffeeRequest) start() {
 
 	sent, err := p.replyToMessageWithInlineKeyboard(
 		p.initialMsg, p.Entry.Question,
@@ -78,7 +79,7 @@ func (p *CoffeeCmd) start() {
 	if err == nil {
 		p.myMessages[sent.MessageID] = sent
 	}
-	log.Printf("Coffee Cmd: new command with msgId: %d", sent.MessageID)
+	log.Printf("Coffee Cmd: new request with msgId: %d", sent.MessageID)
 }
 
 // func (p *CoffeeCmd) cancel() {
@@ -98,7 +99,7 @@ func (p *CoffeeCmd) start() {
 // 	return y1 == y2 && m1 == m2 && d1 == d2
 // }
 
-func (p CoffeeCmd) isReplyOnMyMessage(callback tgbotapi.CallbackQuery) *tgbotapi.Message {
+func (p CoffeeRequest) isReplyOnMyMessage(callback tgbotapi.CallbackQuery) *tgbotapi.Message {
 	if callback.Message != nil {
 		if msg, ok := p.myMessages[callback.Message.MessageID]; ok {
 			return &msg
@@ -108,7 +109,7 @@ func (p CoffeeCmd) isReplyOnMyMessage(callback tgbotapi.CallbackQuery) *tgbotapi
 	return nil
 }
 
-func (p *CoffeeCmd) parseCallbackData(callback tgbotapi.CallbackQuery) (string, *Drink) {
+func (p *CoffeeRequest) parseCallbackData(callback tgbotapi.CallbackQuery) (string, *Drink) {
 	var button string
 	var drink *Drink
 
@@ -123,7 +124,7 @@ func (p *CoffeeCmd) parseCallbackData(callback tgbotapi.CallbackQuery) (string, 
 	return button, drink
 }
 
-func (p *CoffeeCmd) onCallback(callback tgbotapi.CallbackQuery, myMessage tgbotapi.Message) {
+func (p *CoffeeRequest) onCallback(callback tgbotapi.CallbackQuery, myMessage tgbotapi.Message) {
 
 	button, drink := p.parseCallbackData(callback)
 	if drink == nil {
@@ -144,6 +145,13 @@ func (p *CoffeeCmd) onCallback(callback tgbotapi.CallbackQuery, myMessage tgbota
 		// p.notifyUser(callback, "Good choice!")
 		//TODO: post chosen drink for collection
 		log.Printf("Coffee Cmd: drink '%s' selected by %s", drink.ID, callback.Message.From)
+		placeOrder(CoffeeOrder{
+			UserID:    p.initialMsg.From.ID,
+			UserName:  p.initialMsg.From.FirstName,
+			Bewerage:  drink.ID,
+			Price:     drink.Price,
+			OrderTime: time.Now(),
+		})
 
 	case btnCANCEL:
 		p.updateMessage(callback, "Your order cancelled...\nSorry to see you go...")
@@ -152,7 +160,7 @@ func (p *CoffeeCmd) onCallback(callback tgbotapi.CallbackQuery, myMessage tgbota
 	}
 }
 
-func (p *CoffeeCmd) nextQuestion(callback tgbotapi.CallbackQuery, drink Drink) {
+func (p *CoffeeRequest) nextQuestion(callback tgbotapi.CallbackQuery, drink Drink) {
 
 	log.Printf("Selected: %+v", drink)
 
@@ -168,7 +176,7 @@ func (p *CoffeeCmd) nextQuestion(callback tgbotapi.CallbackQuery, drink Drink) {
 	}
 }
 
-func (p *CoffeeCmd) prevQuestion(callback tgbotapi.CallbackQuery, drink Drink) {
+func (p *CoffeeRequest) prevQuestion(callback tgbotapi.CallbackQuery, drink Drink) {
 
 	log.Printf("Back to: %+v", drink)
 
@@ -177,8 +185,8 @@ func (p *CoffeeCmd) prevQuestion(callback tgbotapi.CallbackQuery, drink Drink) {
 	p.updateInlineKeyboard(callback, chooseOneDrink(p.Entry, nil))
 }
 
-func initCoffeeCmd(bot Bot, message tgbotapi.Message) *CoffeeCmd {
-	newCmd := &CoffeeCmd{
+func initCoffeeRequest(bot Bot, message tgbotapi.Message) *CoffeeRequest {
+	newCmd := &CoffeeRequest{
 		Bot:        bot,
 		initialMsg: message,
 		chatID:     message.Chat.ID,

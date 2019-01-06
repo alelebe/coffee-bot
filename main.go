@@ -158,6 +158,10 @@ func main() {
 	}
 	log.Println("Started in " + p.mode + " mode")
 
+	// MemCachier
+	mcClient := initMemCache()
+	defer mcClient.Quit()
+
 	// construct Telergam Bots
 	p.news = initNewsBot(getVar("NEWS_TOKEN"), p.debugBot)
 	p.coffee = initCoffeeBot(getVar("COFFEE_TOKEN"), p.debugBot)

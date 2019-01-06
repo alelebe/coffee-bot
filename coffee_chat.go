@@ -16,7 +16,9 @@ type CoffeeChat struct {
 	model    *fuzzy.Model
 	replacer *misspell.StringReplacer
 
-	coffeeCmd *CoffeeCmd
+	// Command handlers
+	coffeeRequest *CoffeeRequest
+	coffeeCollect *CoffeeCollect
 }
 
 func initCoffeeChat(bot Bot, chatID int64) *CoffeeChat {
@@ -43,12 +45,17 @@ func (p *CoffeeChat) newCommand(message tgbotapi.Message) bool {
 		// 	p.coffeeCmd.cancel()
 		// 	break
 		// }
-		if p.coffeeCmd == nil {
-			p.coffeeCmd = initCoffeeCmd(p.Bot, message)
+		if p.coffeeRequest == nil {
+			p.coffeeRequest = initCoffeeRequest(p.Bot, message)
 		}
-		p.coffeeCmd.start()
+		p.coffeeRequest.start()
 
 	case "/collect":
+		if p.coffeeCollect == nil {
+			p.coffeeCollect = initCoffeeCollect(p.Bot, message)
+		}
+		p.coffeeCollect.start()
+
 	default:
 		p.replyToMessage(message, "I'm sorry... I don't understand your command...")
 		return false
@@ -58,10 +65,10 @@ func (p *CoffeeChat) newCommand(message tgbotapi.Message) bool {
 
 func (p *CoffeeChat) callbackQuery(callback tgbotapi.CallbackQuery) bool {
 
-	if p.coffeeCmd != nil {
-		msg := p.coffeeCmd.isReplyOnMyMessage(callback)
+	if p.coffeeRequest != nil {
+		msg := p.coffeeRequest.isReplyOnMyMessage(callback)
 		if msg != nil {
-			p.coffeeCmd.onCallback(callback, *msg)
+			p.coffeeRequest.onCallback(callback, *msg)
 			return true
 		}
 	}
