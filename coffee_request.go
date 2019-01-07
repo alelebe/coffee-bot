@@ -9,12 +9,6 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-const (
-	btnCONFIRM = "Confirm"
-	btnCANCEL  = "Cancel"
-	btnBACK    = "<< Back"
-)
-
 //CoffeeRequest :
 type CoffeeRequest struct {
 	Bot
