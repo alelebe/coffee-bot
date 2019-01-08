@@ -68,10 +68,19 @@ func (p *CoffeeChat) callbackQuery(callback tgbotapi.CallbackQuery) bool {
 	if p.coffeeRequest != nil {
 		msg := p.coffeeRequest.isReplyOnMyMessage(callback)
 		if msg != nil {
-			p.coffeeRequest.onCallback(callback, *msg)
+			p.coffeeRequest.onCallback(callback)
 			return true
 		}
 	}
+
+	if p.coffeeCollect != nil {
+		msg := p.coffeeCollect.isReplyOnMyMessage(callback)
+		if msg != nil {
+			p.coffeeCollect.onCallback(callback)
+			return true
+		}
+	}
+
 	log.Printf("Old callback.Data '%s', skipping...", callback.Data)
 	return false
 }

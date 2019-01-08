@@ -73,7 +73,7 @@ func (p *CoffeeRequest) start() {
 	if err == nil {
 		p.myMessages[sent.MessageID] = sent
 	}
-	log.Printf("Coffee Cmd: new request with msgId: %d", sent.MessageID)
+	log.Printf("Coffee Request: new request with msgId: %d", sent.MessageID)
 }
 
 // func (p *CoffeeCmd) cancel() {
@@ -99,7 +99,7 @@ func (p CoffeeRequest) isReplyOnMyMessage(callback tgbotapi.CallbackQuery) *tgbo
 			return &msg
 		}
 	}
-	log.Printf("Coffee Cmd: can't find msgId: %d in my messages: %+v", callback.Message.MessageID, p.myMessages)
+	log.Printf("Coffee Request: can't find msgId: %d in my messages: %+v", callback.Message.MessageID, p.myMessages)
 	return nil
 }
 
@@ -118,7 +118,7 @@ func (p *CoffeeRequest) parseCallbackData(callback tgbotapi.CallbackQuery) (stri
 	return button, drink
 }
 
-func (p *CoffeeRequest) onCallback(callback tgbotapi.CallbackQuery, myMessage tgbotapi.Message) {
+func (p *CoffeeRequest) onCallback(callback tgbotapi.CallbackQuery) {
 
 	button, drink := p.parseCallbackData(callback)
 	if drink == nil {
@@ -134,18 +134,7 @@ func (p *CoffeeRequest) onCallback(callback tgbotapi.CallbackQuery, myMessage tg
 		p.prevQuestion(callback, *drink)
 
 	case btnCONFIRM:
-		p.updateMessageWithMarkdown(callback, fmt.Sprintf("Thanks! Your choice below:\n*%s*\n£%.2f", drink.ID, drink.Price))
-		p.removeInlineKeyboard(callback)
-		// p.notifyUser(callback, "Good choice!")
-		//TODO: post chosen drink for collection
-		log.Printf("Coffee Cmd: drink '%s' selected by %s", drink.ID, callback.Message.From)
-		placeOrder(CoffeeOrder{
-			UserID:    p.initialMsg.From.ID,
-			UserName:  p.initialMsg.From.FirstName,
-			Bewerage:  drink.ID,
-			Price:     drink.Price,
-			OrderTime: time.Now(),
-		})
+		p.finishRequest(callback, *drink)
 
 	case btnCANCEL:
 		p.updateMessage(callback, "Your order cancelled...\nSorry to see you go...")
@@ -177,6 +166,25 @@ func (p *CoffeeRequest) prevQuestion(callback tgbotapi.CallbackQuery, drink Drin
 	//back to 1st question
 	p.updateMessage(callback, p.Entry.Question)
 	p.updateInlineKeyboard(callback, chooseOneDrink(p.Entry, nil))
+}
+
+func (p *CoffeeRequest) finishRequest(callback tgbotapi.CallbackQuery, drink Drink) {
+
+	log.Printf("Coffee Request: drink '%s' selected by %s", drink.ID, callback.Message.From)
+
+	p.updateMessageWithMarkdown(callback, fmt.Sprintf("Thanks! Your choice below:\n*%s*\n£%.2f", drink.ID, drink.Price))
+	p.removeInlineKeyboard(callback)
+
+	// p.notifyUser(callback, "Good choice!")
+	//TODO: post chosen drink for collection
+
+	placeOrder(CoffeeOrder{
+		UserID:    p.initialMsg.From.ID,
+		UserName:  p.initialMsg.From.FirstName,
+		Bewerage:  drink.ID,
+		Price:     drink.Price,
+		OrderTime: time.Now(),
+	})
 }
 
 func initCoffeeRequest(bot Bot, message tgbotapi.Message) *CoffeeRequest {

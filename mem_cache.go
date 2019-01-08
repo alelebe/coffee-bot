@@ -58,14 +58,14 @@ func placeOrder(order CoffeeOrder) error {
 	return err
 }
 
-func collectOrders() []CoffeeOrder {
+func collectOrders() ([]CoffeeOrder, uint64) {
 	var err error
 
-	allValues, _, _, err := mcClient.GAT(ordersKey, expTime2)
+	allValues, _, cas, err := mcClient.GAT(ordersKey, expTime2)
 	if err == mc.ErrNotFound {
-		return make([]CoffeeOrder, 0)
+		return make([]CoffeeOrder, 0), 0
 	} else if err != nil {
-		log.Printf("Mem Cache: Failed to Get('%s') : %v", ordersKey, err)
+		log.Printf("Mem Cache: Failed to GAT('%s') : %v", ordersKey, err)
 	}
 
 	lines := strings.Split(string(allValues), "\n")
@@ -86,5 +86,5 @@ func collectOrders() []CoffeeOrder {
 		}
 		orders = append(orders, obj)
 	}
-	return orders
+	return orders, cas
 }

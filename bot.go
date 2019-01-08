@@ -133,6 +133,14 @@ func (bot Bot) notifyUser(callback tgbotapi.CallbackQuery, text string) {
 		))
 }
 
+func (bot Bot) alertUser(callback tgbotapi.CallbackQuery, text string) {
+	bot.AnswerCallbackQuery(
+		tgbotapi.NewCallbackWithAlert(
+			callback.ID,
+			text,
+		))
+}
+
 func (bot Bot) replyToMessage(message tgbotapi.Message, text string) (tgbotapi.Message, error) {
 	return bot.Send(
 		tgbotapi.NewMessage(
@@ -148,6 +156,7 @@ func (bot Bot) replyToMessageWithInlineKeyboard(message tgbotapi.Message, text s
 		message.Chat.ID,
 		text,
 	)
+	msg.ParseMode = "Markdown"
 	msg.BaseChat.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(keyboard...)
 
 	return bot.Send(msg)
