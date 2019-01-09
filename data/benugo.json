@@ -12,12 +12,12 @@
                         {
                             "ID": "Cappuccino",
                             "Display": "Yes, please",
-                            "Price": 1.90
+                            "Price": 2.05
                         },
                         {
                             "ID": "Cappuccino no chocolate",
                             "Display": "No, thanks",
-                            "Price": 1.90
+                            "Price": 2.05
                         }
                     ]
                 }
@@ -31,12 +31,12 @@
                         {
                             "ID": "Black coffee",
                             "Display": "Black",
-                            "Price": 1.99
+                            "Price": 2.05
                         },
                         {
                             "ID": "Americano with milk",
                             "Display": "White",
-                            "Price": 1.90
+                            "Price": 2.05
                         }
                     ]
                 }
@@ -44,12 +44,26 @@
             {
                 "ID": "Flat White",
                 "Display": "Flat White",
-                "Price": 1.90
+                "Price": 2.05
             },
             {
                 "ID": "Macchiato",
                 "Display": "Macchiato",
-                "Price": 1.90
+                "Entry": {
+                    "Question": "Single or double?",
+                    "Items": [
+                        {
+                            "ID": "Macchiato (single)",
+                            "Display": "Single",
+                            "Price": 1.45
+                        },
+                        {
+                            "ID": "Double Macchiato",
+                            "Display": "Double",
+                            "Price": 1.65
+                        }
+                    ]
+                }
             },
             {
                 "ID": "Espresso",
@@ -60,12 +74,12 @@
                         {
                             "ID": "Espresso (single)",
                             "Display": "Single",
-                            "Price": 1.80
+                            "Price": 1.45
                         },
                         {
                             "ID": "Double Espresso",
                             "Display": "Double",
-                            "Price": 1.99
+                            "Price": 1.65
                         }
                     ]
                 }
@@ -79,12 +93,12 @@
                         {
                             "ID": "Black Tea",
                             "Display": "Black tea",
-                            "Price": 1.90
+                            "Price": 0.90
                         },
                         {
                             "ID": "Tea and milk",
                             "Display": "White tea",
-                            "Price": 1.90
+                            "Price": 0.90
                         }
                     ]
                 }
