@@ -149,7 +149,7 @@ func (p *CoffeeRequest) nextQuestion(callback tgbotapi.CallbackQuery, drink Drin
 
 	if drink.Entry.Items == nil {
 		//confirm chosen drink
-		p.updateMessageWithMarkdown(callback, fmt.Sprintf("Please confirm your choice:\n*%s*\n£%.2f", drink.ID, drink.Price))
+		p.updateMessage(callback, fmt.Sprintf("Please confirm your choice:\n*%s*\n", drink.ID))
 		p.updateInlineKeyboard(callback, confirmChosenDrink(drink))
 
 	} else {
@@ -172,11 +172,9 @@ func (p *CoffeeRequest) finishRequest(callback tgbotapi.CallbackQuery, drink Dri
 
 	log.Printf("Coffee Request: drink '%s' selected by %s", drink.ID, callback.Message.From)
 
-	p.updateMessageWithMarkdown(callback, fmt.Sprintf("Thanks! Your choice below:\n*%s*\n£%.2f", drink.ID, drink.Price))
+	p.notifyUser(callback, "Thanks!")
+	p.updateMessage(callback, fmt.Sprintf("Your choice:\n*%s*\t_£%.2f_", drink.ID, drink.Price))
 	p.removeInlineKeyboard(callback)
-
-	// p.notifyUser(callback, "Good choice!")
-	//TODO: post chosen drink for collection
 
 	placeOrder(CoffeeOrder{
 		UserID:    p.initialMsg.From.ID,

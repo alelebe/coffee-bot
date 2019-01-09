@@ -58,7 +58,7 @@ func placeOrder(order CoffeeOrder) error {
 	return err
 }
 
-func collectOrders() ([]CoffeeOrder, uint64) {
+func ordersReadyForCollection() ([]CoffeeOrder, uint64) {
 	var err error
 
 	allValues, _, cas, err := mcClient.GAT(ordersKey, expTime2)
@@ -87,4 +87,15 @@ func collectOrders() ([]CoffeeOrder, uint64) {
 		orders = append(orders, obj)
 	}
 	return orders, cas
+}
+
+func collectOrdes(cas uint64) bool {
+	var err error
+
+	err = mcClient.DelCAS(ordersKey, cas)
+	if err != nil {
+		log.Printf("Mem Cache: Failed to DelCAS('%s') : %v", ordersKey, err)
+		return false
+	}
+	return true
 }

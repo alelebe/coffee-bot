@@ -163,15 +163,6 @@ func (bot Bot) replyToMessageWithInlineKeyboard(message tgbotapi.Message, text s
 }
 
 func (bot Bot) updateMessage(callback tgbotapi.CallbackQuery, text string) {
-	bot.Send(
-		tgbotapi.NewEditMessageText(
-			callback.Message.Chat.ID,
-			callback.Message.MessageID,
-			text,
-		))
-}
-
-func (bot Bot) updateMessageWithMarkdown(callback tgbotapi.CallbackQuery, text string) {
 	msg := tgbotapi.NewEditMessageText(
 		callback.Message.Chat.ID,
 		callback.Message.MessageID,

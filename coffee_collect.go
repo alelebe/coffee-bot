@@ -25,12 +25,7 @@ type CoffeeCollect struct {
 
 func (p *CoffeeCollect) start() {
 
-	var orders []CoffeeOrder
-	var cas uint64
-
-	orders, cas = collectOrders()
-	log.Printf("%d orders ready for collection: %+v", len(orders), orders)
-
+	orders, cas := ordersReadyForCollection()
 	if len(orders) == 0 {
 		p.replyToMessage(p.initialMsg, "No orders are ready for collection today...\nPlease try again later")
 		return
@@ -41,22 +36,45 @@ func (p *CoffeeCollect) start() {
 		ordersFromUsers(orders),
 		confirmCollection(),
 	)
-	if err == nil {
-		p.myRequests[sent.MessageID] = CollectionRequest{
-			message:    sent,
-			orders:     orders,
-			orders_cas: cas,
-		}
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("%d order(s) ready for collection: %+v", len(orders), orders)
+
+	p.myRequests[sent.MessageID] = CollectionRequest{
+		message:    sent,
+		orders:     orders,
+		orders_cas: cas,
 	}
 }
 
 func ordersFromUsers(orders []CoffeeOrder) string {
-	result := fmt.Sprintf("I have %d orders ready for collection from those users:\n", len(orders))
-	for _, it := range orders {
-		result += "\n*" + it.UserName + "*"
+	var s string
+	if len(orders) > 1 {
+		s = "s"
 	}
+
+	result := fmt.Sprintf("*%d* order%s ready for collection from:\n", len(orders), s)
+	for _, it := range orders {
+		result += "\n*" + it.UserName + "*: " + it.Bewerage
+	}
+
 	if len(orders) > 0 {
 		result += "\n\nPlease confirm you would like to collect?"
+	}
+	return result
+}
+
+func ordersToCollect(orders []CoffeeOrder) string {
+
+	bewerages := make(map[string]int, 0)
+	for _, it := range orders {
+		bewerages[it.Bewerage]++
+	}
+
+	result := "You've just collected:"
+	for it, value := range bewerages {
+		result += fmt.Sprintf("\n*%d*\t%s", value, it)
 	}
 	return result
 }
@@ -91,16 +109,21 @@ func (p *CoffeeCollect) onCallback(callback tgbotapi.CallbackQuery) {
 	button := callback.Data
 
 	switch button {
-
-	case btnCONFIRM:
+	case btnCOLLECT:
 		p.finishRequest(callback, req)
 	}
 }
 
 func (p *CoffeeCollect) finishRequest(callback tgbotapi.CallbackQuery, request CollectionRequest) {
 
-	log.Printf("Coffee Collect: drinks are ready for collection: %+v", request)
+	if collectOrdes(request.orders_cas) {
+		log.Printf("Coffee Collect: request is successfully collected: %+v", request)
+		p.updateMessage(callback, ordersToCollect(request.orders))
 
+	} else {
+		p.updateMessage(callback, "New order has just arrived... please verify and start again...")
+	}
+	p.removeInlineKeyboard(callback)
 }
 
 func initCoffeeCollect(bot Bot, message tgbotapi.Message) *CoffeeCollect {
