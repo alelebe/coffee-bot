@@ -10,7 +10,7 @@
                     "Question": "Would you like some chocolate on top?",
                     "Items": [
                         {
-                            "ID": "Cappuccino",
+                            "ID": "Cappuccino + chocolate",
                             "Display": "Yes, please",
                             "Price": 2.05
                         },
@@ -29,7 +29,7 @@
                     "Question": "Black or White?",
                     "Items": [
                         {
-                            "ID": "Black coffee",
+                            "ID": "Americano",
                             "Display": "Black",
                             "Price": 2.05
                         },
@@ -50,10 +50,10 @@
                 "ID": "Macchiato",
                 "Display": "Macchiato",
                 "Entry": {
-                    "Question": "Single or double?",
+                    "Question": "Single or Double?",
                     "Items": [
                         {
-                            "ID": "Macchiato (single)",
+                            "ID": "Macchiato",
                             "Display": "Single",
                             "Price": 1.45
                         },
@@ -69,10 +69,10 @@
                 "ID": "Espresso",
                 "Display": "Espresso",
                 "Entry": {
-                    "Question": "Single or double?",
+                    "Question": "Single or Double?",
                     "Items": [
                         {
-                            "ID": "Espresso (single)",
+                            "ID": "Espresso",
                             "Display": "Single",
                             "Price": 1.45
                         },
@@ -92,12 +92,12 @@
                     "Items": [
                         {
                             "ID": "Black Tea",
-                            "Display": "Black tea",
+                            "Display": "Black Tea",
                             "Price": 0.90
                         },
                         {
-                            "ID": "Tea and milk",
-                            "Display": "White tea",
+                            "ID": "Tea with milk",
+                            "Display": "White Tea",
                             "Price": 0.90
                         }
                     ]
