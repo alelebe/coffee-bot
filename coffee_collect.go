@@ -111,6 +111,11 @@ func (p *CoffeeCollect) onCallback(callback tgbotapi.CallbackQuery) {
 	switch button {
 	case btnCOLLECT:
 		p.finishRequest(callback, req)
+
+	case btnCANCEL:
+		p.updateMessage(callback, "Collection cancelled...")
+		p.removeInlineKeyboard(callback)
+		// p.notifyUser(callback, "Request aborted")
 	}
 }
 
