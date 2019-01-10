@@ -46,7 +46,7 @@ func (bot Bot) logBotDetails() {
 func (bot Bot) dispatchMessage(update tgbotapi.Update, handler UpdateHandler) {
 	if update.Message != nil {
 		// log.Printf("Date: %v\n", time.Unix(int64(update.Message.Date), 0))
-		log.Printf("From %+v (%s): %+v\n", update.Message.From, update.Message.Chat.Type, update.Message.Text)
+		log.Printf("From %+v (%s): %s\n", update.Message.From, update.Message.Chat.Type, update.Message.Text)
 
 		handler.ProcessMessage(*update.Message)
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
@@ -31,7 +32,7 @@ func (p *CoffeeBot) ProcessMessage(message tgbotapi.Message) {
 		p.activeChats[message.Chat.ID] = chat
 	}
 
-	if message.Text[0] == '/' {
+	if strings.HasPrefix(message.Text, "/") {
 		chat.newCommand(message)
 	} else {
 		chat.newMessage(message)
