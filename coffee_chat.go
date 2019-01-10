@@ -61,9 +61,12 @@ func (p *CoffeeChat) newCommand(message tgbotapi.Message) bool {
 		p.coffeeCollect.start()
 
 	case "/help":
-		p.replyToMessage(message, "The bot helps teammates buy hot beverages in the morning..."+
-			"/coffee - every one places an order for coffee"+
-			"/collect - one and only coffee-man collect aggregated order to physically buy drinks and deliver to fans")
+		p.replyToMessage(message, "The bot helps team-mates buy hot beverages in the morning...\n\n"+
+			"/coffee - every human places an order for hot beverage\n"+
+			"/collect - one and only one human collects orders from the bot memory "+
+			"and physically places an aggregated order to buy "+
+			"and deliver beverages to the team-mates\n\n"+
+			"After collection the bot is ready for the next round")
 	}
 	return true
 }

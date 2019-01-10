@@ -44,7 +44,7 @@ Setup Bot commands:
 	/setcommands
 	coffee - Place request for a hot beverage
 	collect - Collect all requests to purchase coffee
-	help - description of the process interaction with bot
+	help - How to speak to the bot
 ```
 
 ## HOWTO(s)
