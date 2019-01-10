@@ -7,8 +7,8 @@ import (
 
 const filePath string = "./data/benugo.json"
 
-func TestLoadBewerages(t *testing.T) {
-	benugo, err := loadBewerages(filePath)
+func TestLoadBeverages(t *testing.T) {
+	benugo, err := loadBeverages(filePath)
 	if err != nil {
 		t.Errorf("'%s' can't be loaded: %v", filePath, err)
 		return
@@ -46,7 +46,7 @@ func TestLoadBewerages(t *testing.T) {
 }
 
 func TestGetDrinkItem(t *testing.T) {
-	benugo, err := loadBewerages(filePath)
+	benugo, err := loadBeverages(filePath)
 	if err != nil {
 		t.Errorf("'%s' can't be loaded: %v", filePath, err)
 		return

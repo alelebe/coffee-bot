@@ -15,12 +15,12 @@ type CoffeeRequest struct {
 	initialMsg tgbotapi.Message
 	chatID     int64
 
-	Entry Bewerages
+	Entry Beverages
 	// allDrinks  map[string]node
 	myMessages map[int]tgbotapi.Message
 }
 
-func chooseOneDrink(entry Bewerages, parent *Drink) [][]tgbotapi.InlineKeyboardButton {
+func chooseOneDrink(entry Beverages, parent *Drink) [][]tgbotapi.InlineKeyboardButton {
 
 	drinks := entry.Items
 	if parent != nil {
@@ -179,7 +179,7 @@ func (p *CoffeeRequest) finishRequest(callback tgbotapi.CallbackQuery, drink Dri
 	placeOrder(CoffeeOrder{
 		UserID:    p.initialMsg.From.ID,
 		UserName:  p.initialMsg.From.FirstName,
-		Bewerage:  drink.ID,
+		Beverage:  drink.ID,
 		Price:     drink.Price,
 		OrderTime: time.Now(),
 	})
@@ -194,13 +194,13 @@ func initCoffeeRequest(bot Bot, message tgbotapi.Message) *CoffeeRequest {
 	}
 
 	const filePath = "./data/benugo.json"
-	menu, err := loadBewerages(filePath)
+	menu, err := loadBeverages(filePath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	newCmd.Entry = menu.Entry
 
 	all := newCmd.Entry.getAllEntries()
-	log.Printf("Bewerages loaded from file: %s, available items: %d", filePath, len(all))
+	log.Printf("Beverages loaded from file: %s, available items: %d", filePath, len(all))
 	return newCmd
 }

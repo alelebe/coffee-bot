@@ -30,7 +30,7 @@ func initMemCache() *mc.Client {
 type CoffeeOrder struct {
 	UserID    int
 	UserName  string
-	Bewerage  string
+	Beverage  string
 	Price     float64
 	OrderTime time.Time
 }
@@ -81,7 +81,7 @@ func ordersReadyForCollection() ([]CoffeeOrder, uint64) {
 			log.Printf("CoffeeOrder: json.Unmarshal failed: %v", err)
 		}
 		//skip broken orders...
-		if obj.UserID == 0 || obj.UserName == "" || obj.Bewerage == "" || obj.Price == 0 {
+		if obj.UserID == 0 || obj.UserName == "" || obj.Beverage == "" || obj.Price == 0 {
 			continue
 		}
 		orders = append(orders, obj)

@@ -40,6 +40,10 @@ func (p *CoffeeChat) newMessage(message tgbotapi.Message) {
 func (p *CoffeeChat) newCommand(message tgbotapi.Message) bool {
 
 	switch message.Text {
+	default:
+		p.replyToMessage(message, "I'm sorry... I don't understand your command...")
+		return false
+
 	case "/coffee":
 		// if p.coffeeCmd != nil {
 		// 	p.coffeeCmd.cancel()
@@ -56,9 +60,10 @@ func (p *CoffeeChat) newCommand(message tgbotapi.Message) bool {
 		}
 		p.coffeeCollect.start()
 
-	default:
-		p.replyToMessage(message, "I'm sorry... I don't understand your command...")
-		return false
+	case "/help":
+		p.replyToMessage(message, "The bot helps teammates buy hot beverages in the morning..."+
+			"/coffee - every one places an order for coffee"+
+			"/collect - one and only coffee-man collect aggregated order to physically buy drinks and deliver to fans")
 	}
 	return true
 }

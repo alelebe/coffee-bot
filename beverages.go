@@ -9,21 +9,21 @@ import (
 //Menu :
 type Menu struct {
 	Title string
-	Entry Bewerages
+	Entry Beverages
 }
 
-// Bewerages :
-type Bewerages struct {
+// Beverages :
+type Beverages struct {
 	Question string
 	Items    []Drink
 }
 
-//Drink : hot bewerages available at the caffee
+//Drink : hot beverages available at the caffee
 type Drink struct {
 	ID      string
 	Display string
 	Price   float64 `json:",omitempty"`
-	Entry   Bewerages
+	Entry   Beverages
 }
 
 //DrinkIterFunc :
@@ -42,7 +42,7 @@ func traverse(items []Drink, callback DrinkIterFunc) *Drink {
 	return nil
 }
 
-func (entry Bewerages) getAllEntries() []Drink {
+func (entry Beverages) getAllEntries() []Drink {
 	output := make([]Drink, 0, len(entry.Items))
 	f := func(item Drink) bool {
 		output = append(output, item)
@@ -52,7 +52,7 @@ func (entry Bewerages) getAllEntries() []Drink {
 	return output
 }
 
-func (entry Bewerages) getDrinkByID(ID string) *Drink {
+func (entry Beverages) getDrinkByID(ID string) *Drink {
 	var item *Drink
 	f := func(it Drink) bool {
 		if it.ID == ID {
@@ -65,7 +65,7 @@ func (entry Bewerages) getDrinkByID(ID string) *Drink {
 	return item
 }
 
-func loadBewerages(filePath string) (*Menu, error) {
+func loadBeverages(filePath string) (*Menu, error) {
 	var err error
 
 	file, err := os.Open(filePath)

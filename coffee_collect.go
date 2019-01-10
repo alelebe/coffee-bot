@@ -9,9 +9,9 @@ import (
 
 // CollectionRequest :
 type CollectionRequest struct {
-	message    tgbotapi.Message
-	orders     []CoffeeOrder
-	orders_cas uint64
+	message tgbotapi.Message
+	orders  []CoffeeOrder
+	cas     uint64
 }
 
 // CoffeeCollect :
@@ -42,9 +42,9 @@ func (p *CoffeeCollect) start() {
 	log.Printf("%d order(s) ready for collection: %+v", len(orders), orders)
 
 	p.myRequests[sent.MessageID] = CollectionRequest{
-		message:    sent,
-		orders:     orders,
-		orders_cas: cas,
+		message: sent,
+		orders:  orders,
+		cas:     cas,
 	}
 }
 
@@ -56,7 +56,7 @@ func ordersFromUsers(orders []CoffeeOrder) string {
 
 	result := fmt.Sprintf("*%d* order%s ready for collection from:\n", len(orders), s)
 	for _, it := range orders {
-		result += "\n*" + it.UserName + "*: " + it.Bewerage
+		result += "\n*" + it.UserName + "*: " + it.Beverage
 	}
 
 	if len(orders) > 0 {
@@ -69,7 +69,7 @@ func ordersToCollect(orders []CoffeeOrder) string {
 
 	bewerages := make(map[string]int, 0)
 	for _, it := range orders {
-		bewerages[it.Bewerage]++
+		bewerages[it.Beverage]++
 	}
 
 	result := "You've just collected:"
@@ -121,7 +121,7 @@ func (p *CoffeeCollect) onCallback(callback tgbotapi.CallbackQuery) {
 
 func (p *CoffeeCollect) finishRequest(callback tgbotapi.CallbackQuery, request CollectionRequest) {
 
-	if collectOrdes(request.orders_cas) {
+	if collectOrdes(request.cas) {
 		log.Printf("Coffee Collect: request is successfully collected: %+v", request)
 		p.updateMessage(callback, ordersToCollect(request.orders))
 
