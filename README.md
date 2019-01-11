@@ -140,7 +140,7 @@ Create .vscode/launch.json with standard configuration:
 	$ git push heroku master
 ```
 
-## Set up Memcache
+## SMemcache
 
 Based on Heroku article: https://devcenter.heroku.com/articles/gin-memcache
 
@@ -169,3 +169,12 @@ Please verify your account to install this add-on plan (please enter a credit ca
 	```
 		$ /usr/local/opt/memcached/bin/memcached
 	```
+
+## Logging Addon: Timber.io
+
+https://elements.heroku.com/addons/timber-logging
+
+### Add Timber.io to heroku app
+```
+	$ heroku addons:create timber-logging:free
+```
