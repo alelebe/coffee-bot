@@ -30,6 +30,7 @@ func initMemCache() *mc.Client {
 type CoffeeOrder struct {
 	UserID    int
 	UserName  string
+	ChatID    int64
 	Beverage  string
 	Price     float64
 	OrderTime time.Time

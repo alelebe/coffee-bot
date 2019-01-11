@@ -67,13 +67,13 @@ func ordersFromUsers(orders []CoffeeOrder) string {
 
 func ordersToCollect(orders []CoffeeOrder) string {
 
-	bewerages := make(map[string]int, 0)
+	beverages := make(map[string]int, 0)
 	for _, it := range orders {
-		bewerages[it.Beverage]++
+		beverages[it.Beverage]++
 	}
 
 	result := "You've just collected:"
-	for it, value := range bewerages {
+	for it, value := range beverages {
 		result += fmt.Sprintf("\n*%d*\t%s", value, it)
 	}
 	return result
@@ -109,6 +109,9 @@ func (p *CoffeeCollect) onCallback(callback tgbotapi.CallbackQuery) {
 	button := callback.Data
 
 	switch button {
+	default:
+		return
+
 	case btnCOLLECT:
 		p.finishRequest(callback, req)
 
@@ -117,6 +120,9 @@ func (p *CoffeeCollect) onCallback(callback tgbotapi.CallbackQuery) {
 		p.removeInlineKeyboard(callback)
 		// p.notifyUser(callback, "Request aborted")
 	}
+
+	//remove request from my queue
+	delete(p.myRequests, callback.Message.MessageID)
 }
 
 func (p *CoffeeCollect) finishRequest(callback tgbotapi.CallbackQuery, request CollectionRequest) {
@@ -124,11 +130,25 @@ func (p *CoffeeCollect) finishRequest(callback tgbotapi.CallbackQuery, request C
 	if collectOrdes(request.cas) {
 		log.Printf("Coffee Collect: request is successfully collected: %+v", request)
 		p.updateMessage(callback, ordersToCollect(request.orders))
+		p.notifyOnCollection(callback.Message.Chat.ID, request.orders)
 
 	} else {
 		p.updateMessage(callback, "New order has just arrived... please verify and start again...")
 	}
 	p.removeInlineKeyboard(callback)
+}
+
+func (p *CoffeeCollect) notifyOnCollection(originalChatID int64, orders []CoffeeOrder) {
+	for _, it := range orders {
+
+		if it.ChatID != 0 &&
+			it.UserID != p.initialMsg.From.ID {
+
+			p.sendToChat(it.ChatID,
+				fmt.Sprintf("%s,\nYour order was collectied by %s", it.UserName, p.initialMsg.From.FirstName),
+			)
+		}
+	}
 }
 
 func initCoffeeCollect(bot Bot, message tgbotapi.Message) *CoffeeCollect {

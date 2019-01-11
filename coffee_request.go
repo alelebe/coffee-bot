@@ -179,6 +179,7 @@ func (p *CoffeeRequest) finishRequest(callback tgbotapi.CallbackQuery, drink Dri
 	placeOrder(CoffeeOrder{
 		UserID:    p.initialMsg.From.ID,
 		UserName:  p.initialMsg.From.FirstName,
+		ChatID:    p.initialMsg.Chat.ID,
 		Beverage:  drink.ID,
 		Price:     drink.Price,
 		OrderTime: time.Now(),

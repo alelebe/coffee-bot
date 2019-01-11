@@ -141,6 +141,14 @@ func (bot Bot) alertUser(callback tgbotapi.CallbackQuery, text string) {
 		))
 }
 
+func (bot Bot) sendToChat(chatID int64, text string) (tgbotapi.Message, error) {
+	return bot.Send(
+		tgbotapi.NewMessage(
+			chatID,
+			text,
+		))
+}
+
 func (bot Bot) replyToMessage(message tgbotapi.Message, text string) (tgbotapi.Message, error) {
 	return bot.Send(
 		tgbotapi.NewMessage(
