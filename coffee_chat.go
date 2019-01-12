@@ -8,6 +8,22 @@ import (
 	fuzzy "github.com/sajari/fuzzy"
 )
 
+const (
+	helpStr = `FX Coffee bot helps team-mates buy beverages in the morning... It understands the following commands:
+
+/coffee - every human places an order for hot beverage
+
+/collect - one and only one human collects orders from the bot memory and physically places an aggregated order to buy and deliver beverages to the team-mates
+After collection the bot is ready for the next round.
+
+Bots can't initiate a conversation with human.`
+
+	unknownStr = `I'm sorry... I don't understand you...
+Check available commands by typing /help.
+If you need anything else, please speak to my manager @alelebe"
+`
+)
+
 //CoffeeChat :
 type CoffeeChat struct {
 	Bot
@@ -41,7 +57,7 @@ func (p *CoffeeChat) newCommand(message tgbotapi.Message) bool {
 
 	switch message.Text {
 	default:
-		p.replyToMessage(message, "I'm sorry... I don't understand your command...")
+		p.replyToMessage(message, unknownStr)
 		return false
 
 	case "/coffee":
@@ -61,12 +77,7 @@ func (p *CoffeeChat) newCommand(message tgbotapi.Message) bool {
 		p.coffeeCollect.start()
 
 	case "/help":
-		p.replyToMessage(message, "The bot helps team-mates buy hot beverages in the morning...\n\n"+
-			"/coffee - every human places an order for hot beverage\n"+
-			"/collect - one and only one human collects orders from the bot memory "+
-			"and physically places an aggregated order to buy "+
-			"and deliver beverages to the team-mates\n\n"+
-			"After collection the bot is ready for the next round")
+		p.replyToMessage(message, helpStr)
 	}
 	return true
 }
