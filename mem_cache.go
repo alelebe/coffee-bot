@@ -13,6 +13,8 @@ const (
 	ordersKey = "ORDERS"
 	expTime   = 12 * 3600 // 12 hours
 	expTime2  = 2 * 3600  // 2 hours to collect after 1st collection attemp
+
+	watchersKey = "WATCHERS"
 )
 
 var mcClient *mc.Client
@@ -41,8 +43,10 @@ func placeOrder(order CoffeeOrder) error {
 
 	jsonBytes, err := json.Marshal(order)
 	if err != nil {
+		log.Printf("MemCache: json.Marshal failed on CoffeeOrder %+v, error: %v", order, err)
 		return err
 	}
+
 	orderStr := string(jsonBytes)
 
 	cas, err := mcClient.Add(ordersKey, orderStr, 0, expTime)
@@ -62,14 +66,14 @@ func placeOrder(order CoffeeOrder) error {
 func ordersReadyForCollection() ([]CoffeeOrder, uint64) {
 	var err error
 
-	allValues, _, cas, err := mcClient.GAT(ordersKey, expTime2)
+	allData, _, cas, err := mcClient.GAT(ordersKey, expTime2)
 	if err == mc.ErrNotFound {
 		return make([]CoffeeOrder, 0), 0
 	} else if err != nil {
 		log.Printf("Mem Cache: Failed to GAT('%s') : %v", ordersKey, err)
 	}
 
-	lines := strings.Split(string(allValues), "\n")
+	lines := strings.Split(string(allData), "\n")
 	orders := make([]CoffeeOrder, 0, len(lines))
 
 	for _, strVal := range lines {
@@ -99,4 +103,125 @@ func collectOrdes(cas uint64) bool {
 		return false
 	}
 	return true
+}
+
+// CoffeeWatcher :
+type CoffeeWatcher struct {
+	UserID   int
+	UserName string
+	ChatID   int64
+}
+
+func amIcoffeeWatcher(userID int) (bool, []CoffeeWatcher) {
+
+	allData, _, _, err := mcClient.Get(watchersKey)
+	if err == mc.ErrNotFound {
+		return false, make([]CoffeeWatcher, 0)
+	} else if err != nil {
+		log.Printf("Mem Cache: Failed to Get('%s') : %v", watchersKey, err)
+		return false, make([]CoffeeWatcher, 0)
+	}
+
+	lines := strings.Split(string(allData), "\n")
+	watchers := make([]CoffeeWatcher, 0, len(lines))
+	found := false
+
+	for _, strVal := range lines {
+		if strVal == "" {
+			continue
+		}
+		var obj CoffeeWatcher
+		err = json.Unmarshal([]byte(strVal), &obj)
+		if err != nil {
+			log.Printf("CoffeeWatcher: json.Unmarshal failed: %v", err)
+		}
+
+		//skip broken watchers...
+		if obj.UserID == 0 || obj.UserName == "" || obj.ChatID == 0 {
+			continue
+		}
+
+		watchers = append(watchers, obj)
+		if userID == obj.UserID {
+			// I am Coffee Watcher!
+			found = true
+		}
+	}
+	return found, watchers
+}
+
+func addCoffeeWatcher(watcher CoffeeWatcher) error {
+	var err error
+
+	jsonBytes, err := json.Marshal(watcher)
+	if err != nil {
+		log.Printf("MemCache: json.Marshal failed on CoffeeWatcher: %+v, error: %v", watcher, err)
+		return err
+	}
+
+	watcherStr := string(jsonBytes)
+
+	cas, err := mcClient.Add(watchersKey, watcherStr, 0, 0)
+	if err == mc.ErrKeyExists {
+		log.Printf("MemCache: Key '%s' already exists in the cache. Appending...", watchersKey)
+		_, err = mcClient.Append(watchersKey, "\n"+watcherStr, cas)
+	}
+
+	if err == nil {
+		log.Printf("MemCache: Watcher successfully added: %s", watcherStr)
+	} else {
+		log.Printf("MemCache: Watcher addition failed: %v", err)
+	}
+	return err
+}
+
+func removeCoffeeWatcher(watcher CoffeeWatcher) error {
+	var err error
+
+	allData, _, cas, err := mcClient.Get(watchersKey)
+	if err == mc.ErrNotFound {
+		return nil
+	} else if err != nil {
+		log.Printf("Mem Cache: Failed to Get('%s') : %v", watchersKey, err)
+		return err
+	}
+
+	lines := strings.Split(string(allData), "\n")
+	var newData string
+	found := false
+
+	for _, strVal := range lines {
+		if strVal == "" {
+			continue
+		}
+		var obj CoffeeWatcher
+		err = json.Unmarshal([]byte(strVal), &obj)
+		if err != nil {
+			log.Printf("CoffeeWatcher: json.Unmarshal failed: %v", err)
+		}
+
+		//skip broken watchers...
+		if obj.UserID == 0 || obj.UserName == "" || obj.ChatID == 0 {
+			continue
+		}
+		if watcher.UserID == obj.UserID {
+			found = true
+			continue
+		}
+
+		if len(newData) > 0 {
+			newData += "\n" + strVal
+		} else {
+			newData = strVal
+		}
+	}
+
+	if found {
+		if len(newData) > 0 {
+			_, err = mcClient.Replace(watchersKey, newData, 0, 0, cas)
+		} else {
+			err = mcClient.DelCAS(watchersKey, cas)
+		}
+	}
+	return err
 }

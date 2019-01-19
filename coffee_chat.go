@@ -20,8 +20,7 @@ Bots can't initiate a conversation with human.`
 
 	unknownStr = `I'm sorry... I don't understand you...
 Check available commands by typing /help.
-If you need anything else, please speak to my manager @alelebe"
-`
+If you need anything else, please speak to my manager @alelebe.`
 )
 
 //CoffeeChat :
@@ -35,6 +34,7 @@ type CoffeeChat struct {
 	// Command handlers
 	coffeeRequest *CoffeeRequest
 	coffeeCollect *CoffeeCollect
+	coffeeWatch   *CoffeeWatch
 }
 
 func initCoffeeChat(bot Bot, chatID int64) *CoffeeChat {
@@ -78,26 +78,31 @@ func (p *CoffeeChat) newCommand(message tgbotapi.Message) bool {
 
 	case "/help":
 		p.replyToMessage(message, helpStr)
+
+	case "/watch":
+		if p.coffeeWatch == nil {
+			p.coffeeWatch = initCoffeeWatch(p.Bot, message)
+		}
+		p.coffeeWatch.start()
 	}
 	return true
 }
 
 func (p *CoffeeChat) callbackQuery(callback tgbotapi.CallbackQuery) bool {
 
-	if p.coffeeRequest != nil {
-		msg := p.coffeeRequest.isReplyOnMyMessage(callback)
-		if msg != nil {
-			p.coffeeRequest.onCallback(callback)
-			return true
-		}
+	if p.coffeeRequest != nil && p.coffeeRequest.isReplyOnMyMessage(callback) {
+		p.coffeeRequest.onCallback(callback)
+		return true
 	}
 
-	if p.coffeeCollect != nil {
-		msg := p.coffeeCollect.isReplyOnMyMessage(callback)
-		if msg != nil {
-			p.coffeeCollect.onCallback(callback)
-			return true
-		}
+	if p.coffeeCollect != nil && p.coffeeCollect.isReplyOnMyMessage(callback) {
+		p.coffeeCollect.onCallback(callback)
+		return true
+	}
+
+	if p.coffeeWatch != nil && p.coffeeWatch.isReplyOnMyMessage(callback) {
+		p.coffeeWatch.onCallback(callback)
+		return true
 	}
 
 	log.Printf("Old callback.Data '%s', skipping...", callback.Data)

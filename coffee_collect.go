@@ -89,14 +89,14 @@ func confirmCollection() [][]tgbotapi.InlineKeyboardButton {
 	return keyboard
 }
 
-func (p CoffeeCollect) isReplyOnMyMessage(callback tgbotapi.CallbackQuery) *tgbotapi.Message {
+func (p CoffeeCollect) isReplyOnMyMessage(callback tgbotapi.CallbackQuery) bool {
 	if callback.Message != nil {
-		if req, ok := p.myRequests[callback.Message.MessageID]; ok {
-			return &req.message
+		if _, ok := p.myRequests[callback.Message.MessageID]; ok {
+			return true
 		}
 	}
 	log.Printf("Coffee Collect: can't find msgId: %d in my messages: %+v", callback.Message.MessageID, p.myRequests)
-	return nil
+	return false
 }
 
 func (p *CoffeeCollect) onCallback(callback tgbotapi.CallbackQuery) {

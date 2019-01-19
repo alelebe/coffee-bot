@@ -16,8 +16,29 @@ type CoffeeRequest struct {
 	chatID     int64
 
 	Entry Beverages
-	// allDrinks  map[string]node
-	myMessages map[int]tgbotapi.Message
+
+	myRequests map[int]tgbotapi.Message
+}
+
+func initCoffeeRequest(bot Bot, message tgbotapi.Message) *CoffeeRequest {
+	newCmd := &CoffeeRequest{
+		Bot:        bot,
+		initialMsg: message,
+		chatID:     message.Chat.ID,
+
+		myRequests: make(map[int]tgbotapi.Message),
+	}
+
+	const filePath = "./data/benugo.json"
+	menu, err := loadBeverages(filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	newCmd.Entry = menu.Entry
+
+	all := newCmd.Entry.getAllEntries()
+	log.Printf("Beverages loaded from file: %s, available items: %d", filePath, len(all))
+	return newCmd
 }
 
 func chooseOneDrink(entry Beverages, parent *Drink) [][]tgbotapi.InlineKeyboardButton {
@@ -71,7 +92,7 @@ func (p *CoffeeRequest) start() {
 		chooseOneDrink(p.Entry, nil),
 	)
 	if err == nil {
-		p.myMessages[sent.MessageID] = sent
+		p.myRequests[sent.MessageID] = sent
 	}
 	log.Printf("Coffee Request: new request with msgId: %d", sent.MessageID)
 }
@@ -93,14 +114,14 @@ func (p *CoffeeRequest) start() {
 // 	return y1 == y2 && m1 == m2 && d1 == d2
 // }
 
-func (p CoffeeRequest) isReplyOnMyMessage(callback tgbotapi.CallbackQuery) *tgbotapi.Message {
+func (p CoffeeRequest) isReplyOnMyMessage(callback tgbotapi.CallbackQuery) bool {
 	if callback.Message != nil {
-		if msg, ok := p.myMessages[callback.Message.MessageID]; ok {
-			return &msg
+		if _, ok := p.myRequests[callback.Message.MessageID]; ok {
+			return true
 		}
 	}
-	log.Printf("Coffee Request: can't find msgId: %d in my messages: %+v", callback.Message.MessageID, p.myMessages)
-	return nil
+	log.Printf("Coffee Request: can't find msgId: %d in my messages: %+v", callback.Message.MessageID, p.myRequests)
+	return false
 }
 
 func (p *CoffeeRequest) parseCallbackData(callback tgbotapi.CallbackQuery) (string, *Drink) {
@@ -184,24 +205,4 @@ func (p *CoffeeRequest) finishRequest(callback tgbotapi.CallbackQuery, drink Dri
 		Price:     drink.Price,
 		OrderTime: time.Now(),
 	})
-}
-
-func initCoffeeRequest(bot Bot, message tgbotapi.Message) *CoffeeRequest {
-	newCmd := &CoffeeRequest{
-		Bot:        bot,
-		initialMsg: message,
-		chatID:     message.Chat.ID,
-		myMessages: make(map[int]tgbotapi.Message),
-	}
-
-	const filePath = "./data/benugo.json"
-	menu, err := loadBeverages(filePath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	newCmd.Entry = menu.Entry
-
-	all := newCmd.Entry.getAllEntries()
-	log.Printf("Beverages loaded from file: %s, available items: %d", filePath, len(all))
-	return newCmd
 }

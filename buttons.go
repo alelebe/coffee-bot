@@ -5,4 +5,7 @@ const (
 	btnCANCEL  = "Cancel"
 	btnCONFIRM = "Confirm"
 	btnCOLLECT = "Collect"
+
+	btnWATCH = "Watch"
+	btnSTOP  = "Stop"
 )
