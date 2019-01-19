@@ -120,7 +120,6 @@ func (p CoffeeRequest) isReplyOnMyMessage(callback tgbotapi.CallbackQuery) bool 
 			return true
 		}
 	}
-	log.Printf("Coffee Request: can't find msgId: %d in my messages: %+v", callback.Message.MessageID, p.myRequests)
 	return false
 }
 
@@ -193,16 +192,33 @@ func (p *CoffeeRequest) finishRequest(callback tgbotapi.CallbackQuery, drink Dri
 
 	log.Printf("Coffee Request: drink '%s' selected by %s", drink.ID, callback.Message.From)
 
-	p.notifyUser(callback, "Thanks!")
+	p.notifyUser(callback, "Good choice, Sir!")
 	p.updateMessage(callback, fmt.Sprintf("Your choice:\n*%s*\t_£%.2f_", drink.ID, drink.Price))
 	p.removeInlineKeyboard(callback)
 
-	placeOrder(CoffeeOrder{
+	order := CoffeeOrder{
 		UserID:    p.initialMsg.From.ID,
 		UserName:  p.initialMsg.From.FirstName,
 		ChatID:    p.initialMsg.Chat.ID,
 		Beverage:  drink.ID,
 		Price:     drink.Price,
 		OrderTime: time.Now(),
-	})
+	}
+
+	if placeOrder(order) {
+		p.notifyAllWatchers(fmt.Sprintf("%s: order %s", order.UserName, order.Beverage), p.initialMsg.From.ID)
+	}
+}
+
+func (p *CoffeeRequest) notifyAllWatchers(message string, exceptUserID int) {
+
+	allWatchers := allCoffeeWatchers()
+
+	for _, obj := range allWatchers {
+		if obj.UserID == exceptUserID {
+			continue
+		}
+
+		p.sendToChat(obj.ChatID, message)
+	}
 }

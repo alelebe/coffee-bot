@@ -149,6 +149,14 @@ func (bot Bot) sendToChat(chatID int64, text string) (tgbotapi.Message, error) {
 		))
 }
 
+func (bot Bot) sendToChannel(username string, text string) (tgbotapi.Message, error) {
+	return bot.Send(
+		tgbotapi.NewMessageToChannel(
+			username,
+			text,
+		))
+}
+
 func (bot Bot) replyToMessage(message tgbotapi.Message, text string) (tgbotapi.Message, error) {
 	return bot.Send(
 		tgbotapi.NewMessage(

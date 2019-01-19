@@ -38,13 +38,13 @@ type CoffeeOrder struct {
 	OrderTime time.Time
 }
 
-func placeOrder(order CoffeeOrder) error {
+func placeOrder(order CoffeeOrder) bool {
 	var err error
 
 	jsonBytes, err := json.Marshal(order)
 	if err != nil {
 		log.Printf("MemCache: json.Marshal failed on CoffeeOrder %+v, error: %v", order, err)
-		return err
+		return false
 	}
 
 	orderStr := string(jsonBytes)
@@ -57,10 +57,12 @@ func placeOrder(order CoffeeOrder) error {
 
 	if err == nil {
 		log.Printf("MemCache: Order successfully added: %s", orderStr)
+		return true
+
 	} else {
 		log.Printf("MemCache: Order wasn't stored: %v", err)
 	}
-	return err
+	return false
 }
 
 func ordersReadyForCollection() ([]CoffeeOrder, uint64) {
@@ -112,19 +114,26 @@ type CoffeeWatcher struct {
 	ChatID   int64
 }
 
-func amIcoffeeWatcher(userID int) (bool, []CoffeeWatcher) {
+func (p CoffeeWatcher) isEmpty() bool {
+	if p.UserID == 0 || p.UserName == "" || p.ChatID == 0 {
+		return true
+	}
+	return false
+}
+
+func allCoffeeWatchers() []CoffeeWatcher {
+	var err error
 
 	allData, _, _, err := mcClient.Get(watchersKey)
 	if err == mc.ErrNotFound {
-		return false, make([]CoffeeWatcher, 0)
+		return make([]CoffeeWatcher, 0)
 	} else if err != nil {
 		log.Printf("Mem Cache: Failed to Get('%s') : %v", watchersKey, err)
-		return false, make([]CoffeeWatcher, 0)
+		return make([]CoffeeWatcher, 0)
 	}
 
 	lines := strings.Split(string(allData), "\n")
 	watchers := make([]CoffeeWatcher, 0, len(lines))
-	found := false
 
 	for _, strVal := range lines {
 		if strVal == "" {
@@ -137,17 +146,28 @@ func amIcoffeeWatcher(userID int) (bool, []CoffeeWatcher) {
 		}
 
 		//skip broken watchers...
-		if obj.UserID == 0 || obj.UserName == "" || obj.ChatID == 0 {
+		if obj.isEmpty() {
 			continue
 		}
 
 		watchers = append(watchers, obj)
+	}
+	return watchers
+}
+
+func amIcoffeeWatcher(userID int) (bool, []CoffeeWatcher) {
+
+	allWatchers := allCoffeeWatchers()
+	found := false
+
+	for _, obj := range allWatchers {
+
 		if userID == obj.UserID {
 			// I am Coffee Watcher!
 			found = true
 		}
 	}
-	return found, watchers
+	return found, allWatchers
 }
 
 func addCoffeeWatcher(watcher CoffeeWatcher) error {
@@ -201,9 +221,10 @@ func removeCoffeeWatcher(watcher CoffeeWatcher) error {
 		}
 
 		//skip broken watchers...
-		if obj.UserID == 0 || obj.UserName == "" || obj.ChatID == 0 {
+		if obj.isEmpty() {
 			continue
 		}
+		//skip the watcher
 		if watcher.UserID == obj.UserID {
 			found = true
 			continue

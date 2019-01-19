@@ -105,6 +105,6 @@ func (p *CoffeeChat) callbackQuery(callback tgbotapi.CallbackQuery) bool {
 		return true
 	}
 
-	log.Printf("Old callback.Data '%s', skipping...", callback.Data)
+	log.Printf("Coffee Chat: can't find msgId: %d in my chats, callback.Data: %s", callback.Message.MessageID, callback.Data)
 	return false
 }

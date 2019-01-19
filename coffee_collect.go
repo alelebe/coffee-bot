@@ -23,6 +23,17 @@ type CoffeeCollect struct {
 	myRequests map[int]CollectionRequest
 }
 
+func initCoffeeCollect(bot Bot, message tgbotapi.Message) *CoffeeCollect {
+	newCmd := &CoffeeCollect{
+		Bot:        bot,
+		initialMsg: message,
+		chatID:     message.Chat.ID,
+
+		myRequests: make(map[int]CollectionRequest, 0),
+	}
+	return newCmd
+}
+
 func (p *CoffeeCollect) start() {
 
 	orders, cas := ordersReadyForCollection()
@@ -95,7 +106,6 @@ func (p CoffeeCollect) isReplyOnMyMessage(callback tgbotapi.CallbackQuery) bool 
 			return true
 		}
 	}
-	log.Printf("Coffee Collect: can't find msgId: %d in my messages: %+v", callback.Message.MessageID, p.myRequests)
 	return false
 }
 
@@ -133,31 +143,22 @@ func (p *CoffeeCollect) finishRequest(callback tgbotapi.CallbackQuery, request C
 		p.notifyOnCollection(callback.Message.Chat.ID, request.orders)
 
 	} else {
-		p.updateMessage(callback, "New order has just arrived... please verify and start again...")
+		p.updateMessage(callback, "New order has just arrived... please verify and try again...")
 	}
 	p.removeInlineKeyboard(callback)
 }
 
 func (p *CoffeeCollect) notifyOnCollection(originalChatID int64, orders []CoffeeOrder) {
+
 	for _, it := range orders {
 
 		if it.ChatID != 0 &&
 			it.UserID != p.initialMsg.From.ID {
 
 			p.sendToChat(it.ChatID,
-				fmt.Sprintf("%s,\nYour order was collectied by %s", it.UserName, p.initialMsg.From.FirstName),
+				fmt.Sprintf("%s,\nYour order was collected by %s", it.UserName, p.initialMsg.From.FirstName),
 			)
 		}
 	}
-}
-
-func initCoffeeCollect(bot Bot, message tgbotapi.Message) *CoffeeCollect {
-	newCmd := &CoffeeCollect{
-		Bot:        bot,
-		initialMsg: message,
-		chatID:     message.Chat.ID,
-
-		myRequests: make(map[int]CollectionRequest, 0),
-	}
-	return newCmd
+	// notifyAllWatchers(p.Bot, message, p.initialMsg.From.ID)
 }

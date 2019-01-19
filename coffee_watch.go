@@ -89,7 +89,6 @@ func (p CoffeeWatch) isReplyOnMyMessage(callback tgbotapi.CallbackQuery) bool {
 			return true
 		}
 	}
-	log.Printf("Coffee Watch: can't find msgId: %d in my messages: %+v", callback.Message.MessageID, p.myMessages)
 	return false
 }
 
@@ -123,8 +122,8 @@ func (p *CoffeeWatch) startWatching(callback tgbotapi.CallbackQuery) {
 		UserName: p.initialMsg.From.FirstName,
 		ChatID:   p.initialMsg.Chat.ID,
 	})
-	if err != nil {
-		p.updateMessage(callback, "You added to the list of Coffee Watchers.\nEnjoy tracking coffee chat...")
+	if err == nil {
+		p.updateMessage(callback, "I've added you to the list of watchers.\nEnjoy tracking coffee chat...")
 	} else {
 		p.updateMessage(callback, "I'm sorry.. Something went wrong")
 	}
@@ -133,8 +132,15 @@ func (p *CoffeeWatch) startWatching(callback tgbotapi.CallbackQuery) {
 func (p *CoffeeWatch) stopWatching(callback tgbotapi.CallbackQuery) {
 	p.removeInlineKeyboard(callback)
 
-	removeCoffeeWatcher(CoffeeWatcher{
-		UserID: p.initialMsg.From.ID,
-		ChatID: p.initialMsg.Chat.ID,
+	err := removeCoffeeWatcher(CoffeeWatcher{
+		UserID:   p.initialMsg.From.ID,
+		UserName: p.initialMsg.From.FirstName,
+		ChatID:   p.initialMsg.Chat.ID,
 	})
+
+	if err == nil {
+		p.updateMessage(callback, "I've removed you from the list of watchers.")
+	} else {
+		p.updateMessage(callback, "I'm sorry.. Something went wrong")
+	}
 }
