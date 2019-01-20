@@ -58,10 +58,8 @@ func placeOrder(order CoffeeOrder) bool {
 	if err == nil {
 		log.Printf("MemCache: Order successfully added: %s", orderStr)
 		return true
-
-	} else {
-		log.Printf("MemCache: Order wasn't stored: %v", err)
 	}
+	log.Printf("MemCache: Order wasn't stored: %v", err)
 	return false
 }
 
