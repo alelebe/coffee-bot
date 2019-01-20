@@ -125,7 +125,7 @@ func (p *CoffeeCollect) finishRequest(callback tgbotapi.CallbackQuery, request C
 
 	if collectOrdes(request.cas) {
 		log.Printf("Coffee Collect: request is successfully collected: %+v", request)
-		p.updateMessage(callback, ordersToCollect(request.orders))
+		p.updateMessage(callback, collectedOrders(request.orders))
 		p.notifyOnCollection(callback.Message.Chat.ID, request.orders)
 
 	} else {
@@ -134,7 +134,7 @@ func (p *CoffeeCollect) finishRequest(callback tgbotapi.CallbackQuery, request C
 	p.removeInlineKeyboard(callback)
 }
 
-func ordersToCollect(orders []CoffeeOrder) string {
+func collectedOrders(orders []CoffeeOrder) string {
 
 	beverages := make(map[string]int, 0)
 	for _, it := range orders {
