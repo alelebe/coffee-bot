@@ -42,9 +42,10 @@ With GitHub integration, every push to target branch in git repo on GitHub will 
 Setup Bot commands:
 ```
 	/setcommands
-	coffee - Place request for a hot beverage
-	collect - Collect all requests to purchase coffee
+	coffee - Place request for a coffee
+	collect - Collect requests and buy beverages
 	help - How to speak to the bot
+	watch - Add/remove yourself from the watchers
 ```
 
 ## HOWTO(s)

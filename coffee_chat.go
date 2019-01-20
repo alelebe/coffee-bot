@@ -16,7 +16,9 @@ const (
 /collect - one and only one human collects orders from the bot memory and physically places an aggregated order to buy and deliver beverages to the team-mates
 After collection the bot is ready for the next round.
 
-Bots can't initiate a conversation with human.`
+/watch - add or remove user to the list of coffee watchers. They will get notification on coffee trends
+
+Bots can't initiate a conversation with human. Please start by typing /`
 
 	unknownCmdStr = `I'm sorry... I don't understand you...
 Check available commands by typing /help.
