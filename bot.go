@@ -142,11 +142,13 @@ func (bot Bot) alertUser(callback tgbotapi.CallbackQuery, text string) {
 }
 
 func (bot Bot) sendToChat(chatID int64, text string) (tgbotapi.Message, error) {
-	return bot.Send(
-		tgbotapi.NewMessage(
-			chatID,
-			text,
-		))
+	msg := tgbotapi.NewMessage(
+		chatID,
+		text,
+	)
+	msg.ParseMode = "Markdown"
+
+	return bot.Send(msg)
 }
 
 func (bot Bot) sendToChannel(username string, text string) (tgbotapi.Message, error) {

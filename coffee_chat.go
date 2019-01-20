@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	helpStr = `FX Coffee bot helps team-mates buy beverages in the morning... It understands the following commands:
+	helpStr = `FX Coffee bot helps team-mates buy beverages in the morning. It understands the following commands:
 
 /coffee - every human places an order for hot beverage
 
@@ -18,9 +18,14 @@ After collection the bot is ready for the next round.
 
 Bots can't initiate a conversation with human.`
 
-	unknownStr = `I'm sorry... I don't understand you...
+	unknownCmdStr = `I'm sorry... I don't understand you...
 Check available commands by typing /help.
 If you need anything else, please speak to my manager @alelebe.`
+
+	somethingWentWrongStr = `I'm sorry.. Something went wrong`
+	pleaseTryAgainStr     = `Something went wrong... Please verify and try again`
+
+	tellMeWhatToDoStr = "Please tell me what to do. Start with /"
 )
 
 //CoffeeChat :
@@ -57,7 +62,7 @@ func (p *CoffeeChat) newCommand(message tgbotapi.Message) bool {
 
 	switch message.Text {
 	default:
-		p.replyToMessage(message, unknownStr)
+		p.replyToMessage(message, unknownCmdStr)
 		return false
 
 	case "/coffee":

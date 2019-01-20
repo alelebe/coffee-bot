@@ -10,7 +10,7 @@
                     "Question": "Would you like some chocolate on top?",
                     "Items": [
                         {
-                            "ID": "Cappuccino + chocolate",
+                            "ID": "Cappuccino w/ chocolate",
                             "Display": "Yes, please",
                             "Price": 2.05
                         },

@@ -38,13 +38,13 @@ func (p *CoffeeCollect) start() {
 
 	orders, cas := ordersReadyForCollection()
 	if len(orders) == 0 {
-		p.replyToMessage(p.initialMsg, "No orders are ready for collection today...\nPlease try again later")
+		p.replyToMessage(p.initialMsg, "No orders are ready for collection...\nPlease try again later")
 		return
 	}
 
 	sent, err := p.replyToMessageWithInlineKeyboard(
 		p.initialMsg,
-		ordersFromUsers(orders),
+		ordersForCollection(orders),
 		confirmCollection(),
 	)
 	if err != nil {
@@ -59,33 +59,19 @@ func (p *CoffeeCollect) start() {
 	}
 }
 
-func ordersFromUsers(orders []CoffeeOrder) string {
+func ordersForCollection(orders []CoffeeOrder) string {
 	var s string
 	if len(orders) > 1 {
 		s = "s"
 	}
 
-	result := fmt.Sprintf("*%d* order%s ready for collection from:\n", len(orders), s)
+	result := fmt.Sprintf("*%d* order%s ready for collection:\n", len(orders), s)
 	for _, it := range orders {
 		result += "\n*" + it.UserName + "*: " + it.Beverage
 	}
 
 	if len(orders) > 0 {
 		result += "\n\nPlease confirm you would like to collect?"
-	}
-	return result
-}
-
-func ordersToCollect(orders []CoffeeOrder) string {
-
-	beverages := make(map[string]int, 0)
-	for _, it := range orders {
-		beverages[it.Beverage]++
-	}
-
-	result := "You've just collected:"
-	for it, value := range beverages {
-		result += fmt.Sprintf("\n*%d*\t%s", value, it)
 	}
 	return result
 }
@@ -143,22 +129,48 @@ func (p *CoffeeCollect) finishRequest(callback tgbotapi.CallbackQuery, request C
 		p.notifyOnCollection(callback.Message.Chat.ID, request.orders)
 
 	} else {
-		p.updateMessage(callback, "New order has just arrived... please verify and try again...")
+		p.updateMessage(callback, pleaseTryAgainStr)
 	}
 	p.removeInlineKeyboard(callback)
 }
 
+func ordersToCollect(orders []CoffeeOrder) string {
+
+	beverages := make(map[string]int, 0)
+	for _, it := range orders {
+		beverages[it.Beverage]++
+	}
+
+	result := "You've just collected:"
+	for it, value := range beverages {
+		result += fmt.Sprintf("\n*%d*\t%s", value, it)
+	}
+	return result
+}
+
 func (p *CoffeeCollect) notifyOnCollection(originalChatID int64, orders []CoffeeOrder) {
 
-	for _, it := range orders {
+	//remember User IDs of chats where the notification was sent
+	alreadyNotified := make(map[int]bool, 0)
+	alreadyNotified[p.initialMsg.From.ID] = true
 
-		if it.ChatID != 0 &&
-			it.UserID != p.initialMsg.From.ID {
-
-			p.sendToChat(it.ChatID,
-				fmt.Sprintf("%s,\nYour order was collected by %s", it.UserName, p.initialMsg.From.FirstName),
-			)
+	//notify those places orders for coffee
+	yourOrderWasCollected := fmt.Sprintf("Your order was collected by %s", p.initialMsg.From.FirstName)
+	for _, obj := range orders {
+		if _, ok := alreadyNotified[obj.UserID]; ok {
+			continue
 		}
+		p.sendToChat(obj.ChatID, obj.UserName+",\n"+yourOrderWasCollected)
+		alreadyNotified[obj.UserID] = true
 	}
-	// notifyAllWatchers(p.Bot, message, p.initialMsg.From.ID)
+
+	//notify all coffee watchers
+	orderWasCollected := fmt.Sprintf("The order was collected by\n*%s*", p.initialMsg.From.FirstName)
+	for _, obj := range allCoffeeWatchers() {
+		if _, ok := alreadyNotified[obj.UserID]; ok {
+			continue
+		}
+		p.sendToChat(obj.ChatID, orderWasCollected)
+		alreadyNotified[obj.UserID] = true
+	}
 }

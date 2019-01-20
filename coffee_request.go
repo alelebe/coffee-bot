@@ -142,7 +142,7 @@ func (p *CoffeeRequest) onCallback(callback tgbotapi.CallbackQuery) {
 
 	button, drink := p.parseCallbackData(callback)
 	if drink == nil {
-		p.notifyUser(callback, "Something went wrong, sorry...")
+		p.notifyUser(callback, somethingWentWrongStr)
 		return
 	}
 
@@ -193,7 +193,6 @@ func (p *CoffeeRequest) finishRequest(callback tgbotapi.CallbackQuery, drink Dri
 	log.Printf("Coffee Request: drink '%s' selected by %s", drink.ID, callback.Message.From)
 
 	p.notifyUser(callback, "Good choice, Sir!")
-	p.updateMessage(callback, fmt.Sprintf("Your choice:\n*%s*\t_£%.2f_", drink.ID, drink.Price))
 	p.removeInlineKeyboard(callback)
 
 	order := CoffeeOrder{
@@ -206,15 +205,17 @@ func (p *CoffeeRequest) finishRequest(callback tgbotapi.CallbackQuery, drink Dri
 	}
 
 	if placeOrder(order) {
-		p.notifyAllWatchers(fmt.Sprintf("%s: order %s", order.UserName, order.Beverage), p.initialMsg.From.ID)
+		p.updateMessage(callback, fmt.Sprintf("Your choice:\n*%s*\t_£%.2f_", order.Beverage, order.Price))
+		p.notifyAllWatchers(fmt.Sprintf("%s: \n*%s*\t_£%.2f_", order.UserName, order.Beverage, order.Price), order.UserID)
+
+	} else {
+		p.updateMessage(callback, somethingWentWrongStr)
 	}
 }
 
 func (p *CoffeeRequest) notifyAllWatchers(message string, exceptUserID int) {
 
-	allWatchers := allCoffeeWatchers()
-
-	for _, obj := range allWatchers {
+	for _, obj := range allCoffeeWatchers() {
 		if obj.UserID == exceptUserID {
 			continue
 		}

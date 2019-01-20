@@ -107,7 +107,7 @@ func (p *CoffeeWatch) onCallback(callback tgbotapi.CallbackQuery) {
 
 	case btnCANCEL:
 		p.removeInlineKeyboard(callback)
-		p.updateMessage(callback, "Allright. You'll tell me what to do later")
+		p.updateMessage(callback, "Thanks. "+tellMeWhatToDoStr)
 	}
 
 	//remove message from my queue
@@ -125,7 +125,7 @@ func (p *CoffeeWatch) startWatching(callback tgbotapi.CallbackQuery) {
 	if err == nil {
 		p.updateMessage(callback, "I've added you to the list of watchers.\nEnjoy tracking coffee chat...")
 	} else {
-		p.updateMessage(callback, "I'm sorry.. Something went wrong")
+		p.updateMessage(callback, somethingWentWrongStr)
 	}
 }
 
@@ -141,6 +141,6 @@ func (p *CoffeeWatch) stopWatching(callback tgbotapi.CallbackQuery) {
 	if err == nil {
 		p.updateMessage(callback, "I've removed you from the list of watchers.")
 	} else {
-		p.updateMessage(callback, "I'm sorry.. Something went wrong")
+		p.updateMessage(callback, somethingWentWrongStr)
 	}
 }
