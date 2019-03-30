@@ -47,7 +47,12 @@
                 "Price": 2.05
             },
             {
-                "ID": "Macchiato",
+                "ID": "Mocha",
+                "Display": "Mocha",
+                "Price": 2.05
+            },
+            {
+                "ID": "Macchiato [group]",
                 "Display": "Macchiato",
                 "Entry": {
                     "Question": "Single or Double?",
@@ -66,7 +71,7 @@
                 }
             },
             {
-                "ID": "Espresso",
+                "ID": "Espresso [group]",
                 "Display": "Espresso",
                 "Entry": {
                     "Question": "Single or Double?",
@@ -85,20 +90,34 @@
                 }
             },
             {
-                "ID": "Tea",
+                "ID": "Tea [group]",
                 "Display": "Tea",
                 "Entry": {
-                    "Question": "Would you like some milk?",
+                    "Question": "Tea bags or loose leaf teas?",
                     "Items": [
                         {
-                            "ID": "Black Tea",
-                            "Display": "Black Tea",
-                            "Price": 0.90
+                            "ID": "Tea bags",
+                            "Display": "Tea bags",
+                            "Entry": {
+                                "Question": "Would you like some milk?",
+                                "Items": [
+                                    {
+                                        "ID": "Black Tea",
+                                        "Display": "Black Tea",
+                                        "Price": 0.90
+                                    },
+                                    {
+                                        "ID": "Tea with milk",
+                                        "Display": "White Tea",
+                                        "Price": 0.90
+                                    }
+                                ]
+                            }
                         },
                         {
-                            "ID": "Tea with milk",
-                            "Display": "White Tea",
-                            "Price": 0.90
+                            "ID": "Loose leaf tea",
+                            "Display": "Loose leaf tea",
+                            "Price": 1.20
                         }
                     ]
                 }
